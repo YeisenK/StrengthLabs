@@ -6,8 +6,7 @@ part of 'plan_workout.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PlanWorkoutImpl _$$PlanWorkoutImplFromJson(Map<String, dynamic> json) =>
-    _$PlanWorkoutImpl(
+_PlanWorkout _$PlanWorkoutFromJson(Map<String, dynamic> json) => _PlanWorkout(
       id: json['id'] as String,
       day: json['day'] as String,
       exerciseName: json['exerciseName'] as String,
@@ -19,7 +18,7 @@ _$PlanWorkoutImpl _$$PlanWorkoutImplFromJson(Map<String, dynamic> json) =>
       isCompleted: json['isCompleted'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$$PlanWorkoutImplToJson(_$PlanWorkoutImpl instance) =>
+Map<String, dynamic> _$PlanWorkoutToJson(_PlanWorkout instance) =>
     <String, dynamic>{
       'id': instance.id,
       'day': instance.day,

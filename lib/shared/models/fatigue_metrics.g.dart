@@ -6,8 +6,8 @@ part of 'fatigue_metrics.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$FatigueMetricsImpl _$$FatigueMetricsImplFromJson(Map<String, dynamic> json) =>
-    _$FatigueMetricsImpl(
+_FatigueMetrics _$FatigueMetricsFromJson(Map<String, dynamic> json) =>
+    _FatigueMetrics(
       atl: (json['atl'] as num).toDouble(),
       ctl: (json['ctl'] as num).toDouble(),
       tsb: (json['tsb'] as num).toDouble(),
@@ -23,8 +23,7 @@ _$FatigueMetricsImpl _$$FatigueMetricsImplFromJson(Map<String, dynamic> json) =>
           .toList(),
     );
 
-Map<String, dynamic> _$$FatigueMetricsImplToJson(
-        _$FatigueMetricsImpl instance) =>
+Map<String, dynamic> _$FatigueMetricsToJson(_FatigueMetrics instance) =>
     <String, dynamic>{
       'atl': instance.atl,
       'ctl': instance.ctl,

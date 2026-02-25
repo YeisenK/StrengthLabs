@@ -7,7 +7,6 @@ import 'package:asip_fitness_analytics/shared/widgets/loading_indicator.dart';
 import 'package:asip_fitness_analytics/shared/widgets/error_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/semantics.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -37,7 +36,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             onPressed: _refreshData,
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh dashboard data',
-            semanticsLabel: 'Refresh dashboard data',
           ),
         ],
       ),

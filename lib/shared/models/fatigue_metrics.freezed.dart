@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,114 +9,69 @@ part of 'fatigue_metrics.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-FatigueMetrics _$FatigueMetricsFromJson(Map<String, dynamic> json) {
-  return _FatigueMetrics.fromJson(json);
-}
 
 /// @nodoc
 mixin _$FatigueMetrics {
-  double get atl => throw _privateConstructorUsedError;
-  double get ctl => throw _privateConstructorUsedError;
-  double get tsb => throw _privateConstructorUsedError;
-  double get acwr => throw _privateConstructorUsedError;
-  List<double> get atlHistory => throw _privateConstructorUsedError;
-  List<double> get ctlHistory => throw _privateConstructorUsedError;
-  List<DateTime> get dates => throw _privateConstructorUsedError;
-
-  /// Serializes this FatigueMetrics to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  double get atl;
+  double get ctl;
+  double get tsb;
+  double get acwr;
+  List<double> get atlHistory;
+  List<double> get ctlHistory;
+  List<DateTime> get dates;
 
   /// Create a copy of FatigueMetrics
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $FatigueMetricsCopyWith<FatigueMetrics> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $FatigueMetricsCopyWith<$Res> {
-  factory $FatigueMetricsCopyWith(
-          FatigueMetrics value, $Res Function(FatigueMetrics) then) =
-      _$FatigueMetricsCopyWithImpl<$Res, FatigueMetrics>;
-  @useResult
-  $Res call(
-      {double atl,
-      double ctl,
-      double tsb,
-      double acwr,
-      List<double> atlHistory,
-      List<double> ctlHistory,
-      List<DateTime> dates});
-}
-
-/// @nodoc
-class _$FatigueMetricsCopyWithImpl<$Res, $Val extends FatigueMetrics>
-    implements $FatigueMetricsCopyWith<$Res> {
-  _$FatigueMetricsCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of FatigueMetrics
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
+  $FatigueMetricsCopyWith<FatigueMetrics> get copyWith =>
+      _$FatigueMetricsCopyWithImpl<FatigueMetrics>(
+          this as FatigueMetrics, _$identity);
+
+  /// Serializes this FatigueMetrics to a JSON map.
+  Map<String, dynamic> toJson();
+
   @override
-  $Res call({
-    Object? atl = null,
-    Object? ctl = null,
-    Object? tsb = null,
-    Object? acwr = null,
-    Object? atlHistory = null,
-    Object? ctlHistory = null,
-    Object? dates = null,
-  }) {
-    return _then(_value.copyWith(
-      atl: null == atl
-          ? _value.atl
-          : atl // ignore: cast_nullable_to_non_nullable
-              as double,
-      ctl: null == ctl
-          ? _value.ctl
-          : ctl // ignore: cast_nullable_to_non_nullable
-              as double,
-      tsb: null == tsb
-          ? _value.tsb
-          : tsb // ignore: cast_nullable_to_non_nullable
-              as double,
-      acwr: null == acwr
-          ? _value.acwr
-          : acwr // ignore: cast_nullable_to_non_nullable
-              as double,
-      atlHistory: null == atlHistory
-          ? _value.atlHistory
-          : atlHistory // ignore: cast_nullable_to_non_nullable
-              as List<double>,
-      ctlHistory: null == ctlHistory
-          ? _value.ctlHistory
-          : ctlHistory // ignore: cast_nullable_to_non_nullable
-              as List<double>,
-      dates: null == dates
-          ? _value.dates
-          : dates // ignore: cast_nullable_to_non_nullable
-              as List<DateTime>,
-    ) as $Val);
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is FatigueMetrics &&
+            (identical(other.atl, atl) || other.atl == atl) &&
+            (identical(other.ctl, ctl) || other.ctl == ctl) &&
+            (identical(other.tsb, tsb) || other.tsb == tsb) &&
+            (identical(other.acwr, acwr) || other.acwr == acwr) &&
+            const DeepCollectionEquality()
+                .equals(other.atlHistory, atlHistory) &&
+            const DeepCollectionEquality()
+                .equals(other.ctlHistory, ctlHistory) &&
+            const DeepCollectionEquality().equals(other.dates, dates));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      atl,
+      ctl,
+      tsb,
+      acwr,
+      const DeepCollectionEquality().hash(atlHistory),
+      const DeepCollectionEquality().hash(ctlHistory),
+      const DeepCollectionEquality().hash(dates));
+
+  @override
+  String toString() {
+    return 'FatigueMetrics(atl: $atl, ctl: $ctl, tsb: $tsb, acwr: $acwr, atlHistory: $atlHistory, ctlHistory: $ctlHistory, dates: $dates)';
   }
 }
 
 /// @nodoc
-abstract class _$$FatigueMetricsImplCopyWith<$Res>
-    implements $FatigueMetricsCopyWith<$Res> {
-  factory _$$FatigueMetricsImplCopyWith(_$FatigueMetricsImpl value,
-          $Res Function(_$FatigueMetricsImpl) then) =
-      __$$FatigueMetricsImplCopyWithImpl<$Res>;
-  @override
+abstract mixin class $FatigueMetricsCopyWith<$Res> {
+  factory $FatigueMetricsCopyWith(
+          FatigueMetrics value, $Res Function(FatigueMetrics) _then) =
+      _$FatigueMetricsCopyWithImpl;
   @useResult
   $Res call(
       {double atl,
@@ -129,12 +84,12 @@ abstract class _$$FatigueMetricsImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$FatigueMetricsImplCopyWithImpl<$Res>
-    extends _$FatigueMetricsCopyWithImpl<$Res, _$FatigueMetricsImpl>
-    implements _$$FatigueMetricsImplCopyWith<$Res> {
-  __$$FatigueMetricsImplCopyWithImpl(
-      _$FatigueMetricsImpl _value, $Res Function(_$FatigueMetricsImpl) _then)
-      : super(_value, _then);
+class _$FatigueMetricsCopyWithImpl<$Res>
+    implements $FatigueMetricsCopyWith<$Res> {
+  _$FatigueMetricsCopyWithImpl(this._self, this._then);
+
+  final FatigueMetrics _self;
+  final $Res Function(FatigueMetrics) _then;
 
   /// Create a copy of FatigueMetrics
   /// with the given fields replaced by the non-null parameter values.
@@ -149,43 +104,227 @@ class __$$FatigueMetricsImplCopyWithImpl<$Res>
     Object? ctlHistory = null,
     Object? dates = null,
   }) {
-    return _then(_$FatigueMetricsImpl(
+    return _then(_self.copyWith(
       atl: null == atl
-          ? _value.atl
+          ? _self.atl
           : atl // ignore: cast_nullable_to_non_nullable
               as double,
       ctl: null == ctl
-          ? _value.ctl
+          ? _self.ctl
           : ctl // ignore: cast_nullable_to_non_nullable
               as double,
       tsb: null == tsb
-          ? _value.tsb
+          ? _self.tsb
           : tsb // ignore: cast_nullable_to_non_nullable
               as double,
       acwr: null == acwr
-          ? _value.acwr
+          ? _self.acwr
           : acwr // ignore: cast_nullable_to_non_nullable
               as double,
       atlHistory: null == atlHistory
-          ? _value._atlHistory
+          ? _self.atlHistory
           : atlHistory // ignore: cast_nullable_to_non_nullable
               as List<double>,
       ctlHistory: null == ctlHistory
-          ? _value._ctlHistory
+          ? _self.ctlHistory
           : ctlHistory // ignore: cast_nullable_to_non_nullable
               as List<double>,
       dates: null == dates
-          ? _value._dates
+          ? _self.dates
           : dates // ignore: cast_nullable_to_non_nullable
               as List<DateTime>,
     ));
   }
 }
 
+/// Adds pattern-matching-related methods to [FatigueMetrics].
+extension FatigueMetricsPatterns on FatigueMetrics {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_FatigueMetrics value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _FatigueMetrics() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_FatigueMetrics value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _FatigueMetrics():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_FatigueMetrics value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _FatigueMetrics() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(
+            double atl,
+            double ctl,
+            double tsb,
+            double acwr,
+            List<double> atlHistory,
+            List<double> ctlHistory,
+            List<DateTime> dates)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _FatigueMetrics() when $default != null:
+        return $default(_that.atl, _that.ctl, _that.tsb, _that.acwr,
+            _that.atlHistory, _that.ctlHistory, _that.dates);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(
+            double atl,
+            double ctl,
+            double tsb,
+            double acwr,
+            List<double> atlHistory,
+            List<double> ctlHistory,
+            List<DateTime> dates)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _FatigueMetrics():
+        return $default(_that.atl, _that.ctl, _that.tsb, _that.acwr,
+            _that.atlHistory, _that.ctlHistory, _that.dates);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(
+            double atl,
+            double ctl,
+            double tsb,
+            double acwr,
+            List<double> atlHistory,
+            List<double> ctlHistory,
+            List<DateTime> dates)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _FatigueMetrics() when $default != null:
+        return $default(_that.atl, _that.ctl, _that.tsb, _that.acwr,
+            _that.atlHistory, _that.ctlHistory, _that.dates);
+      case _:
+        return null;
+    }
+  }
+}
+
 /// @nodoc
 @JsonSerializable()
-class _$FatigueMetricsImpl implements _FatigueMetrics {
-  const _$FatigueMetricsImpl(
+class _FatigueMetrics implements FatigueMetrics {
+  const _FatigueMetrics(
       {required this.atl,
       required this.ctl,
       required this.tsb,
@@ -196,9 +335,8 @@ class _$FatigueMetricsImpl implements _FatigueMetrics {
       : _atlHistory = atlHistory,
         _ctlHistory = ctlHistory,
         _dates = dates;
-
-  factory _$FatigueMetricsImpl.fromJson(Map<String, dynamic> json) =>
-      _$$FatigueMetricsImplFromJson(json);
+  factory _FatigueMetrics.fromJson(Map<String, dynamic> json) =>
+      _$FatigueMetricsFromJson(json);
 
   @override
   final double atl;
@@ -232,16 +370,26 @@ class _$FatigueMetricsImpl implements _FatigueMetrics {
     return EqualUnmodifiableListView(_dates);
   }
 
+  /// Create a copy of FatigueMetrics
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  String toString() {
-    return 'FatigueMetrics(atl: $atl, ctl: $ctl, tsb: $tsb, acwr: $acwr, atlHistory: $atlHistory, ctlHistory: $ctlHistory, dates: $dates)';
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$FatigueMetricsCopyWith<_FatigueMetrics> get copyWith =>
+      __$FatigueMetricsCopyWithImpl<_FatigueMetrics>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$FatigueMetricsToJson(
+      this,
+    );
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$FatigueMetricsImpl &&
+            other is _FatigueMetrics &&
             (identical(other.atl, atl) || other.atl == atl) &&
             (identical(other.ctl, ctl) || other.ctl == ctl) &&
             (identical(other.tsb, tsb) || other.tsb == tsb) &&
@@ -265,55 +413,82 @@ class _$FatigueMetricsImpl implements _FatigueMetrics {
       const DeepCollectionEquality().hash(_ctlHistory),
       const DeepCollectionEquality().hash(_dates));
 
-  /// Create a copy of FatigueMetrics
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  @pragma('vm:prefer-inline')
-  _$$FatigueMetricsImplCopyWith<_$FatigueMetricsImpl> get copyWith =>
-      __$$FatigueMetricsImplCopyWithImpl<_$FatigueMetricsImpl>(
-          this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$FatigueMetricsImplToJson(
-      this,
-    );
+  String toString() {
+    return 'FatigueMetrics(atl: $atl, ctl: $ctl, tsb: $tsb, acwr: $acwr, atlHistory: $atlHistory, ctlHistory: $ctlHistory, dates: $dates)';
   }
 }
 
-abstract class _FatigueMetrics implements FatigueMetrics {
-  const factory _FatigueMetrics(
-      {required final double atl,
-      required final double ctl,
-      required final double tsb,
-      required final double acwr,
-      required final List<double> atlHistory,
-      required final List<double> ctlHistory,
-      required final List<DateTime> dates}) = _$FatigueMetricsImpl;
+/// @nodoc
+abstract mixin class _$FatigueMetricsCopyWith<$Res>
+    implements $FatigueMetricsCopyWith<$Res> {
+  factory _$FatigueMetricsCopyWith(
+          _FatigueMetrics value, $Res Function(_FatigueMetrics) _then) =
+      __$FatigueMetricsCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {double atl,
+      double ctl,
+      double tsb,
+      double acwr,
+      List<double> atlHistory,
+      List<double> ctlHistory,
+      List<DateTime> dates});
+}
 
-  factory _FatigueMetrics.fromJson(Map<String, dynamic> json) =
-      _$FatigueMetricsImpl.fromJson;
+/// @nodoc
+class __$FatigueMetricsCopyWithImpl<$Res>
+    implements _$FatigueMetricsCopyWith<$Res> {
+  __$FatigueMetricsCopyWithImpl(this._self, this._then);
 
-  @override
-  double get atl;
-  @override
-  double get ctl;
-  @override
-  double get tsb;
-  @override
-  double get acwr;
-  @override
-  List<double> get atlHistory;
-  @override
-  List<double> get ctlHistory;
-  @override
-  List<DateTime> get dates;
+  final _FatigueMetrics _self;
+  final $Res Function(_FatigueMetrics) _then;
 
   /// Create a copy of FatigueMetrics
   /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$FatigueMetricsImplCopyWith<_$FatigueMetricsImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? atl = null,
+    Object? ctl = null,
+    Object? tsb = null,
+    Object? acwr = null,
+    Object? atlHistory = null,
+    Object? ctlHistory = null,
+    Object? dates = null,
+  }) {
+    return _then(_FatigueMetrics(
+      atl: null == atl
+          ? _self.atl
+          : atl // ignore: cast_nullable_to_non_nullable
+              as double,
+      ctl: null == ctl
+          ? _self.ctl
+          : ctl // ignore: cast_nullable_to_non_nullable
+              as double,
+      tsb: null == tsb
+          ? _self.tsb
+          : tsb // ignore: cast_nullable_to_non_nullable
+              as double,
+      acwr: null == acwr
+          ? _self.acwr
+          : acwr // ignore: cast_nullable_to_non_nullable
+              as double,
+      atlHistory: null == atlHistory
+          ? _self._atlHistory
+          : atlHistory // ignore: cast_nullable_to_non_nullable
+              as List<double>,
+      ctlHistory: null == ctlHistory
+          ? _self._ctlHistory
+          : ctlHistory // ignore: cast_nullable_to_non_nullable
+              as List<double>,
+      dates: null == dates
+          ? _self._dates
+          : dates // ignore: cast_nullable_to_non_nullable
+              as List<DateTime>,
+    ));
+  }
 }
+
+// dart format on

@@ -8,24 +8,24 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'dashboard_provider.g.dart';
 
 @riverpod
-DashboardRepository dashboardRepository(DashboardRepositoryRef ref) {
+DashboardRepository dashboardRepository(Ref ref) {
   return DashboardRepository();
 }
 
 @riverpod
-Future<FatigueMetrics> fatigueMetrics(FatigueMetricsRef ref) {
+Future<FatigueMetrics> fatigueMetrics(Ref ref) {
   final repository = ref.watch(dashboardRepositoryProvider);
   return repository.getCurrentMetrics();
 }
 
 @riverpod
-Future<List<WorkoutSession>> recentSessions(RecentSessionsRef ref) {
+Future<List<WorkoutSession>> recentSessions(Ref ref) {
   final repository = ref.watch(dashboardRepositoryProvider);
   return repository.getRecentSessions();
 }
 
 @riverpod
-Future<List<Alert>> activeAlerts(ActiveAlertsRef ref) {
+Future<List<Alert>> activeAlerts(Ref ref) {
   final repository = ref.watch(dashboardRepositoryProvider);
   return repository.getActiveAlerts();
 }

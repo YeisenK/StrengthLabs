@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:asip_fitness_analytics/shared/models/alert.dart';
 
 enum RiskZone { green, yellow, red }
