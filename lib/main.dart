@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/app_theme.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
+import 'features/auth/screens/login_screen.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,14 +23,12 @@ class StrengthLabsApp extends StatelessWidget {
       title: 'StrengthLabs',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const MainShell(),
+      home: const LoginScreen() ,
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// MAIN SHELL — Bottom Navigation
-// ─────────────────────────────────────────────────────────
+
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
