@@ -18,7 +18,7 @@
                                                                   LABS
 ```
 
-**Adaptive Training Intelligence Platform**
+**Adaptive Strength Intelligence Platform**
 
 *Scientifically grounded fatigue modeling · Dynamic injury risk scoring · Transparent periodization engine*
 
@@ -44,12 +44,19 @@
 - [Roles & Permissions](#-roles--permissions)
 - [Contributing](#-contributing)
 - [Roadmap](#-roadmap)
+- [Academic References](#-academic-references)
 
 ---
 
 ## 🧠 What is Strength Labs?
 
-Most training platforms apply static programs that ignore the physiological reality of accumulated fatigue, recovery debt, and adaptive capacity. Manual adjustments remain largely subjective and unquantified.
+Recreational and semi-professional athletes follow static training programs that don't dynamically account for accumulated fatigue, physiological recovery, or adaptation to training stimulus. Adjustment decisions are based on subjective perception, without a system that simultaneously models load, recovery, and progress.
+
+This generates three primary risks:
+
+- Abrupt load increases without quantitative control.
+- Progressive and invisible accumulation of systemic fatigue.
+- Higher probability of injury from overuse or overtraining.
 
 **Strength Labs** is an open, auditable alternative. It implements evidence-based sports science metrics to dynamically model an athlete's training state and automatically recalibrate workload — no black boxes, no proprietary opacity.
 
@@ -81,12 +88,12 @@ CTL(t) = Σ TRIMP(i)  for i in [t-28, t]   # 28-day rolling window
 ACWR = ATL / CTL
 ```
 
-| ACWR Range | Zone   | Interpretation                              |
-|:----------:|:------:|---------------------------------------------|
-| < 0.8      | 🔵 Low  | Under-training; below adaptive stimulus     |
-| 0.8 – 1.3  | 🟢 Optimal | Sweet spot; progression without excess spike |
-| 1.3 – 1.5  | 🟡 Caution | Elevated injury risk; monitor closely       |
-| > 1.5      | 🔴 Danger | High spike; load reduction recommended      |
+| ACWR Range | Zone | Interpretation |
+|:----------:|:----:|----------------|
+| < 0.8 | 🔵 Low | Under-training; below adaptive stimulus |
+| 0.8 – 1.3 | 🟢 Optimal | Sweet spot; progression without excess spike |
+| 1.3 – 1.5 | 🟡 Caution | Elevated injury risk; monitor closely |
+| > 1.5 | 🔴 Danger | High spike; load reduction recommended |
 
 > **Reference:** Hulin et al. (2016), *British Journal of Sports Medicine* — ACWR as a predictor of injury risk in team sport athletes.
 
@@ -98,6 +105,16 @@ TSB = CTL - ATL
 
 TSB drives the adaptive periodization engine. Negative TSB triggers volume recalibration; positive TSB unlocks intensity progression windows.
 
+### Input Variables (User-Generated Data)
+
+Primary variables captured per session:
+
+- Sets · Reps · Weight (kg)
+- RPE / RIR (Rate of Perceived Exertion / Reps in Reserve)
+- Heart rate (mean bpm)
+- Bodyweight (kg)
+- Sleep hours
+
 ---
 
 ## 🏗 Architecture
@@ -107,7 +124,7 @@ Strength Labs implements **Clean Architecture** with strict layer isolation and 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLIENT LAYER                         │
-│              Flutter Web / iOS / Android (SPA)              │
+│              Flutter Web / iOS / Android (SPA/PWA)          │
 └─────────────────────────┬───────────────────────────────────┘
                           │ HTTPS / REST + JWT RS256
 ┌─────────────────────────▼───────────────────────────────────┐
@@ -125,9 +142,9 @@ Strength Labs implements **Clean Architecture** with strict layer isolation and 
 ┌──────────▼──────────┐      ┌────────────▼──────────────────┐
 │    DOMAIN LAYER     │      │      INFRASTRUCTURE LAYER      │
 │  (zero deps)        │      │                               │
-│  Fatigue Engine     │      │  PostgreSQL 16 (Flyway)       │
-│  Risk Engine        │      │  Redis 7 (metric cache)       │
-│  Periodization      │      │  JWT RS256 · OAuth 2.0        │
+│  FatigueEngine      │      │  PostgreSQL 16 (Flyway)       │
+│  RiskEngine         │      │  Redis 7 (metric cache)       │
+│  PeriodizationEngine│      │  JWT RS256 · OAuth 2.0        │
 │  Entities / VOs     │      │  Prometheus · Grafana         │
 └─────────────────────┘      └───────────────────────────────┘
 ```
@@ -142,6 +159,12 @@ Strength Labs implements **Clean Architecture** with strict layer isolation and 
 | `application` | Use cases, DTOs, port interfaces | Infrastructure implementations |
 | `infrastructure` | Repository impls, JWT, cache, DB | Presentation concerns |
 | `presentation` | Controllers, routes, middleware, validators | Domain internals directly |
+
+### SOLID Principles Applied
+
+- **Single Responsibility:** each domain service has one responsibility (`FatigueEngine` only computes ACWR/TSB).
+- **Open/Closed:** new risk algorithms are added by implementing interfaces, without modifying existing code.
+- **Dependency Inversion:** use cases depend on domain interfaces, never on concrete implementations.
 
 ---
 
@@ -179,54 +202,79 @@ Strength Labs implements **Clean Architecture** with strict layer isolation and 
 ## 📁 Project Structure
 
 ```
-strength-labs/
+strengthlabs/
 │
 ├── backend/
 │   └── src/
-│       ├── domain/                   # ← Pure business logic. Zero external deps.
-│       │   ├── entities/             #   TrainingSession, Athlete, Plan
-│       │   ├── engines/              #   FatigueEngine, RiskEngine, PeriodizationEngine
-│       │   ├── value-objects/        #   ACWR, TSB, InjuryRiskScore
-│       │   └── repositories/         #   Repository contracts (interfaces only)
+│       ├── domain/                         # ← Pure business logic. Zero external deps.
+│       │   ├── entities/                   #   TrainingSession, Athlete, Plan
+│       │   ├── engines/                    #   FatigueEngine, RiskEngine, PeriodizationEngine
+│       │   ├── value-objects/              #   ACWR, TSB, InjuryRiskScore
+│       │   └── repositories/              #   Repository contracts (interfaces only)
 │       │
-│       ├── application/              # ← Use case orchestration
+│       ├── application/                    # ← Use case orchestration
 │       │   ├── use-cases/
-│       │   │   ├── sessions/         #   CreateSession, GetSessions, UpdateSession, DeleteSession
-│       │   │   ├── fatigue/          #   CalculateFatigue, GetFatigueHistory
-│       │   │   └── plans/            #   GeneratePlan, AdjustPlan
+│       │   │   ├── sessions/              #   CreateSession, GetSessions, UpdateSession, DeleteSession
+│       │   │   ├── fatigue/               #   CalculateFatigue, GetFatigueHistory
+│       │   │   └── plans/                 #   GeneratePlan, AdjustPlan
 │       │   ├── dtos/
-│       │   └── ports/                #   IJwtService, ICacheService, INotificationService
+│       │   └── ports/                     #   IJwtService, ICacheService, INotificationService
 │       │
-│       ├── infrastructure/           # ← External system adapters
-│       │   ├── database/             #   PostgreSQL repositories, Flyway migrations
-│       │   ├── cache/                #   Redis metric cache (ATL/CTL/TSB)
-│       │   ├── auth/                 #   JWT RS256, OAuth 2.0 (Google)
-│       │   └── monitoring/           #   Prometheus exporters
+│       ├── infrastructure/                 # ← External system adapters
+│       │   ├── database/                  #   PostgreSQL repositories, Flyway migrations
+│       │   ├── cache/                     #   Redis metric cache (ATL/CTL/TSB), TTL 24h
+│       │   ├── auth/                      #   JWT RS256, OAuth 2.0 (Google)
+│       │   └── monitoring/               #   Prometheus exporters
 │       │
-│       └── presentation/             # ← HTTP delivery mechanism
+│       └── presentation/                  # ← HTTP delivery mechanism
 │           ├── controllers/
-│           ├── middleware/           #   authenticate, authorize (RBAC), rateLimiter
-│           └── errors/               #   GlobalExceptionHandler
+│           ├── middleware/               #   authenticate, authorize (RBAC), rateLimiter
+│           └── errors/                   #   GlobalExceptionHandler
 │
-├── frontend/
+├── frontend/                              # Flutter SPA/PWA (current working state)
 │   └── lib/
-│       ├── features/                 # Feature-first structure (sessions, fatigue, plans)
-│       ├── core/                     # Shared widgets, theme, routing
-│       └── infrastructure/           # API client, local storage
+│       ├── core/
+│       │   ├── models/
+│       │   │   ├── session.dart           #   TrainingSession model
+│       │   │   └── training_metrics.dart  #   ATL, CTL, ACWR, TSB value objects
+│       │   └── theme/
+│       │       └── app_theme.dart         #   Material 3 theme configuration
+│       │
+│       └── features/
+│           ├── auth/
+│           │   └── screens/
+│           │       └── login_screen.dart  #   Login + Google OAuth entry point
+│           └── dashboard/
+│               ├── screens/
+│               │   └── dashboard_screen.dart   #   Main analytics dashboard
+│               └── widgets/
+│                   └── dashboard_widgets.dart  #   ACWR gauge, risk zone cards, session list
+│
+├── linux/                                 # Flutter Linux desktop target
+├── macos/                                 # Flutter macOS target
+├── web/                                   # Flutter Web target
+├── android/                               # Flutter Android target
+├── ios/                                   # Flutter iOS target
+├── windows/                               # Flutter Windows target
 │
 ├── docker/
-│   ├── Dockerfile                    # Multi-stage: deps → builder → runner
-│   └── docker-compose.yml            # Full dev stack (API + PostgreSQL + Redis)
+│   ├── Dockerfile                         # Multi-stage: deps → builder → runner (Alpine, non-root)
+│   └── docker-compose.yml                 # Full dev stack: API + PostgreSQL + Redis + Nginx proxy
 │
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                    # Lint → Test → Build → Scan → Push
-│       └── cd.yml                    # Deploy on main merge
+│       ├── ci.yml                         # Lint → Test → Build → Scan (Trivy + OWASP) → Push
+│       └── cd.yml                         # Deploy on main merge (staging auto / prod manual)
 │
-└── docs/
-    ├── algorithms.md                 # ATL/CTL/ACWR/TSB academic references
-    ├── api-reference.md              # Full OpenAPI endpoint documentation
-    └── architecture-decisions/       # ADR log
+├── docs/
+│   ├── algorithms.md                      # ATL/CTL/ACWR/TSB academic references
+│   ├── api-reference.md                   # Full OpenAPI endpoint documentation
+│   └── architecture-decisions/            # ADR log
+│
+├── main.dart                              # Flutter app entry point
+├── pubspec.yaml                           # Flutter dependencies
+├── analysis_options.yaml                  # Dart lint rules
+└── README.md
 ```
 
 ---
@@ -239,6 +287,7 @@ strength-labs/
 docker --version        # Docker 24+
 docker compose version  # Compose v2+
 node --version          # Node.js 22 LTS (backend, if running outside Docker)
+flutter --version       # Flutter 3.x
 ```
 
 ### 1. Clone & configure environment
@@ -264,7 +313,7 @@ To generate the RSA key pair:
 openssl genrsa -out private.pem 4096
 openssl rsa -in private.pem -pubout -out public.pem
 export JWT_PRIVATE_KEY_BASE64=$(base64 -w 0 private.pem)
-export JWT_PUBLIC_KEY_BASE64=$(base64  -w 0 public.pem)
+export JWT_PUBLIC_KEY_BASE64=$(base64 -w 0 public.pem)
 ```
 
 ### 2. Start the full development stack
@@ -277,6 +326,7 @@ This starts:
 - `api` — Backend on `http://localhost:8080`
 - `postgres` — PostgreSQL 16 on port `5432`
 - `redis` — Redis 7 on port `6379`
+- `nginx-proxy` — Reverse proxy with TLS termination and rate limiting
 
 ### 3. Verify the stack is healthy
 
@@ -291,7 +341,17 @@ curl -s http://localhost:8080/health | jq .
 curl -s http://localhost:8080/ready  | jq .
 ```
 
-### 4. Access the API docs
+### 4. Run the Flutter frontend
+
+```bash
+cd frontend
+flutter pub get
+flutter run -d chrome    # Web
+flutter run -d ios       # iOS simulator
+flutter run -d android   # Android emulator
+```
+
+### 5. Access the API docs
 
 OpenAPI 3.0 interactive docs are available at:
 
@@ -324,20 +384,33 @@ PATCH  /api/v1/sessions/:id      # Update session
 DELETE /api/v1/sessions/:id      # Delete session
 ```
 
-### Fatigue Engine
+### Fatigue & Risk Engine
 
 ```http
-GET /api/v1/fatigue/current      # Current ATL, CTL, ACWR, TSB
-GET /api/v1/fatigue/history      # Historical fatigue curve (date range)
-GET /api/v1/fatigue/risk         # Current injury risk classification + score
+GET /api/v1/metrics/fatigue          # Current ATL, CTL, ACWR, TSB
+GET /api/v1/fatigue/history          # Historical fatigue curve (date range)
+GET /api/v1/metrics/risk             # Current injury risk classification + score
 ```
 
 ### Adaptive Plans
 
 ```http
-GET  /api/v1/plans/current       # Active weekly plan
-POST /api/v1/plans/generate      # Trigger plan generation
-POST /api/v1/plans/adjust        # Manual override + recalibration
+GET  /api/v1/plans/current           # Active weekly plan
+POST /api/v1/plans/generate          # Trigger plan generation
+POST /api/v1/plans/adjust            # Manual override + recalibration
+```
+
+### Dashboard
+
+```http
+GET /api/v1/dashboard                # Aggregated metrics for dashboard view
+```
+
+### Admin
+
+```http
+GET    /api/v1/admin/users           # List all users (ADMIN only)
+DELETE /api/v1/admin/users/:id       # Remove user (ADMIN only)
 ```
 
 ### Example: Log a session
@@ -371,15 +444,27 @@ curl -X POST http://localhost:8080/api/v1/sessions \
 |---------|---------------|
 | **Authentication** | JWT RS256 with RSA-4096 key pairs |
 | **Token lifetime** | Access: 15 min · Refresh: 7 days (HttpOnly cookie) |
-| **Authorization** | RBAC middleware — role validated on every request |
-| **OAuth** | Google OAuth 2.0 (PKCE flow) |
+| **Authorization** | RBAC middleware — role validated on every request + resource ownership check |
+| **OAuth** | Google OAuth 2.0 (PKCE flow) — no third-party passwords stored |
 | **Transport** | TLS 1.3 — no HTTP in production |
 | **At-rest encryption** | AES-256 for sensitive athlete data |
-| **Rate limiting** | Per-IP + per-user on auth endpoints |
-| **Error handling** | Global exception handler — zero stack trace exposure |
-| **Headers** | CSP · HSTS · X-Frame-Options · X-Content-Type-Options |
+| **Rate limiting** | 5 attempts / 15 min on auth endpoints (per-IP + per-user) |
+| **Error handling** | Global exception handler — zero stack trace, SQL query, or infra detail exposure |
+| **Headers** | CSP · HSTS · X-Frame-Options · X-Content-Type-Options · SameSite=Strict cookies |
 | **Dependencies** | OWASP Dependency-Check in CI — blocks on HIGH/CRITICAL |
 | **Images** | Trivy scan in CI — blocks on CRITICAL CVEs |
+
+### OWASP Top 10 Coverage
+
+| Vulnerability | Mitigation |
+|---------------|------------|
+| A01: Broken Access Control | RBAC strict. Resource ownership validated on every request. |
+| A02: Cryptographic Failures | TLS 1.3 in transit. AES-256 at rest for sensitive data. |
+| A03: Injection (SQL) | Parameterized ORM. No query concatenation. Input validation. |
+| A05: Security Misconfiguration | Security HTTP headers. Per-environment config. |
+| A06: Vulnerable Components | Dependabot + OWASP Dependency-Check on every pipeline run. |
+| A07: Auth Failures | Rate limiting on login. Rotating tokens. Logout invalidates session. |
+| XSS / CSRF | Strict CSP. SameSite=Strict on cookies. Output sanitization in Flutter. |
 
 ---
 
@@ -388,11 +473,12 @@ curl -X POST http://localhost:8080/api/v1/sessions \
 | Metric | Target |
 |--------|--------|
 | P95 response time (analytical queries) | < 300ms |
-| Test coverage | ≥ 80% |
+| Redis cache hit rate (ATL/CTL/TSB) | > 95% |
+| Test coverage (lines + branches) | ≥ 80% |
 | Critical CVEs in CI | 0 |
+| ArchUnit Clean Architecture violations | 0 |
 | Lighthouse Performance score | > 90 |
-| Lighthouse Accessibility score | > 90 |
-| Redis cache hit rate (ATL/CTL) | > 95% |
+| Lighthouse Accessibility score | > 90 (WCAG AA) |
 
 ---
 
@@ -408,9 +494,23 @@ curl -X POST http://localhost:8080/api/v1/sessions \
 │             │ adjust plans · monitor athlete risk metrics                  │
 ├─────────────┼──────────────────────────────────────────────────────────────┤
 │ admin       │ trainer permissions + user management · system config ·      │
-│             │ full audit log access                                         │
+│             │ full audit log access (all actions audited)                  │
 └─────────────┴──────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 🖥 Frontend Screens
+
+| Screen | Content |
+|--------|---------|
+| **Dashboard** | Current ACWR, TSB, risk zone, recent sessions, and active alerts |
+| **Session Log** | Per-exercise form with real-time load calculation (RPE/RIR → TRIMP) |
+| **Fatigue Analysis** | Historical ATL/CTL charts, ACWR index with color-coded zones |
+| **Adaptive Plan** | Auto-generated weekly plan, manually adjustable with recalibration |
+| **Profile & Metrics** | Bodyweight evolution, sleep trends, and per-exercise performance |
+
+The Flutter client is a SPA with PWA capabilities: offline session logging, automatic sync on reconnect, and push notifications for risk alerts.
 
 ---
 
@@ -423,12 +523,15 @@ Contributions welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before o
 git checkout -b feat/your-feature-name
 
 # Install dependencies
-npm ci   # or: mvn install
+flutter pub get          # frontend
+npm ci                   # or: mvn install (backend)
 
 # Run tests
-npm run test:ci
+flutter test             # frontend
+npm run test:ci          # backend
 
 # Ensure linting passes
+flutter analyze
 npm run lint
 
 # Commit using Conventional Commits
@@ -448,23 +551,35 @@ git commit -m "feat(fatigue-engine): add ACWR spike detection threshold"
 - [x] Clean Architecture scaffolding
 - [x] JWT RS256 authentication
 - [x] Training session CRUD
+- [x] Flutter login screen & dashboard skeleton
+- [x] Core models: `TrainingSession`, `TrainingMetrics`
 - [ ] ATL/CTL/ACWR/TSB fatigue engine (v0.2)
 - [ ] Injury risk index with alert system (v0.2)
 - [ ] Adaptive periodization engine (v0.3)
-- [ ] Flutter Web dashboard — fatigue visualization (v0.3)
+- [ ] Flutter Web dashboard — fatigue visualization & historical charts (v0.3)
 - [ ] Google OAuth 2.0 integration (v0.4)
 - [ ] Prometheus + Grafana observability stack (v0.4)
 - [ ] Flutter iOS / Android mobile app (v0.5)
+- [ ] Offline mode + PWA push notifications (v0.5)
 - [ ] JWKS endpoint for key rotation (v0.5)
 - [ ] Trainer multi-athlete dashboard (v0.6)
+- [ ] Google Fit / Apple HealthKit biometric integration (v0.6)
 
 ---
 
 ## 📚 Academic References
 
-- Hulin, B. T., et al. (2016). *The acute:chronic workload ratio predicts injury: high chronic workload may decrease injury risk in elite rugby league players.* British Journal of Sports Medicine.
-- Banister, E. W. (1991). *Modeling elite athletic performance.* Physiological Testing of Elite Athletes.
+- Gabbett, T.J. (2016). *The training-injury prevention paradox: should athletes be training smarter and harder?* British Journal of Sports Medicine.
+- Hulin, B.T. et al. (2016). *Spikes in acute:chronic workload ratio (ACWR) predict injury: high chronic workload may decrease injury risk in elite rugby league players.* British Journal of Sports Medicine.
 - Foster, C. (1998). *Monitoring training in athletes with reference to overtraining syndrome.* Medicine & Science in Sports & Exercise.
+- Foster, C. (2001). *A new approach to monitoring exercise training.* Journal of Strength and Conditioning Research.
+- Banister, E.W. (1991). *Modeling elite athletic performance.* Physiological Testing of Elite Athletes.
+- OWASP Foundation (2021). *OWASP Top Ten.* https://owasp.org/Top10/
+
+**Scientific Datasets:**
+- Kaggle — Weightlifting Datasets (ACWR model validation)
+- Kaggle — Heart Rate Datasets (heart rate component calibration)
+- Open mHealth (biometric integration standards)
 
 ---
 
@@ -473,6 +588,8 @@ git commit -m "feat(fatigue-engine): add ACWR spike detection threshold"
 **Strength Labs** — bridging sports science and software engineering.
 
 Built with rigor. Designed for transparency. Optimized for athletes.
+
+*Oscar Eduardo Cruz Cruz · Cristina Enríquez Martínez · Yeisen Kenneth López Reyes*
 
 <br/>
 
