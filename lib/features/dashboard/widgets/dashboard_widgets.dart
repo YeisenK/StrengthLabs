@@ -4,9 +4,6 @@ import '../../../core/models/training_metrics.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/sl_card.dart';
 
-// ─────────────────────────────────────────────────────────
-// TSB HERO CARD
-// ─────────────────────────────────────────────────────────
 class TSBHeroCard extends StatelessWidget {
   final TrainingMetrics metrics;
 
@@ -16,8 +13,8 @@ class TSBHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final (borderColor, accentColor, tagVariant) = switch (metrics.riskLevel) {
       RiskLevel.green => (
-          AppColors.accent.withOpacity(0.25),
-          AppColors.accent,
+          AppColors.riskGreen.withOpacity(0.25),
+          AppColors.riskGreen,
           TagVariant.green
         ),
       RiskLevel.yellow => (
@@ -91,9 +88,6 @@ class TSBHeroCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// ATL / CTL METRIC CARDS ROW
-// ─────────────────────────────────────────────────────────
 class MetricsRow extends StatelessWidget {
   final TrainingMetrics metrics;
 
@@ -172,22 +166,18 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// ACWR BAR
-// ─────────────────────────────────────────────────────────
 class ACWRBar extends StatelessWidget {
   final double acwr;
 
   const ACWRBar({super.key, required this.acwr});
 
   Color get _indicatorColor {
-    if (acwr < 0.8) return AppColors.accent;
+    if (acwr < 0.8) return AppColors.riskGreen;
     if (acwr <= 1.3) return AppColors.accent4;
     if (acwr <= 1.5) return AppColors.accent3;
     return AppColors.riskRed;
   }
 
-  // Maps ACWR 0.5–1.7 to 0.0–1.0 fill
   double get _fill => ((acwr - 0.5) / 1.2).clamp(0.0, 1.0);
 
   @override
@@ -250,7 +240,7 @@ class ACWRBar extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'ShareTechMono',
                 fontSize: 8,
-                color: AppColors.accent,
+                color: AppColors.riskGreen,
               ),
             ),
             Text(
@@ -276,9 +266,6 @@ class ACWRBar extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// ATL / CTL MINI CHART (Custom Painter)
-// ─────────────────────────────────────────────────────────
 class ATLCTLMiniChart extends StatelessWidget {
   final List<ChartPoint> data;
 
@@ -291,10 +278,10 @@ class ATLCTLMiniChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SLSectionLabel('ATL / CTL — ÚLTIMAS 4 SEMANAS'),
+              SLSectionLabel('ATL / CTL — ÚLTIMAS 4 SEMANAS'),
               SLTag('LIVE', variant: TagVariant.cyan),
             ],
           ),
@@ -375,7 +362,9 @@ class _ChartPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
+            // ignore: deprecated_member_use
             AppColors.accent2.withOpacity(0.2),
+            // ignore: deprecated_member_use
             AppColors.accent2.withOpacity(0),
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
@@ -428,9 +417,6 @@ class _ChartPainter extends CustomPainter {
   bool shouldRepaint(_ChartPainter old) => old.data != data;
 }
 
-// ─────────────────────────────────────────────────────────
-// QUICK ACTIONS ROW
-// ─────────────────────────────────────────────────────────
 class QuickActionsRow extends StatelessWidget {
   final VoidCallback onLogSession;
   final VoidCallback onViewPlan;

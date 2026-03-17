@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/screens/auth_flow.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
-import 'features/auth/screens/login_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
 
 
 void main() {
@@ -11,7 +14,7 @@ void main() {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
-  runApp(const StrengthLabsApp());
+  runApp(const ProviderScope(child: StrengthLabsApp()));
 }
 
 class StrengthLabsApp extends StatelessWidget {
@@ -23,11 +26,42 @@ class StrengthLabsApp extends StatelessWidget {
       title: 'StrengthLabs',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const LoginScreen() ,
+      home: const _AppRouter(),
     );
   }
 }
 
+class _AppRouter extends ConsumerWidget {
+  const _AppRouter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    return switch (authState) {
+      AuthInitial() => const _SplashScreen(),
+      AuthAuthenticated() => const MainShell(),
+      AuthUnauthenticated() => const AuthFlow(),
+    };
+  }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.bg,
+      body: Center(
+        child: CircularProgressIndicator(
+          color: AppColors.accent,
+          strokeWidth: 2,
+        ),
+      ),
+    );
+  }
+}
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -41,9 +75,9 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _screens = const [
     DashboardScreen(),
-    _PlaceholderScreen(label: 'MÉTRICAS'),   // → MetricsScreen()
-    _PlaceholderScreen(label: 'PLAN'),        // → PlanScreen()
-    _PlaceholderScreen(label: 'PERFIL'),      // → ProfileScreen()
+    _PlaceholderScreen(label: 'MÉTRICAS'),
+    _PlaceholderScreen(label: 'PLAN'),
+    ProfileScreen(),
   ];
 
   @override
@@ -61,9 +95,7 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// CUSTOM BOTTOM NAV BAR
-// ─────────────────────────────────────────────────────────
+
 class _SLBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -135,7 +167,6 @@ class _NavItem {
   const _NavItem(this.icon, this.label);
 }
 
-// Placeholder para pantallas pendientes
 class _PlaceholderScreen extends StatelessWidget {
   final String label;
   const _PlaceholderScreen({required this.label});

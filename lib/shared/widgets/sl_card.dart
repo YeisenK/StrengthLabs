@@ -50,8 +50,8 @@ class SLTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bg, fg) = switch (variant) {
       TagVariant.green => (
-          AppColors.accent.withOpacity(0.1),
-          AppColors.accent
+          AppColors.riskGreen.withOpacity(0.1),
+          AppColors.riskGreen
         ),
       TagVariant.yellow => (
           AppColors.accent4.withOpacity(0.1),

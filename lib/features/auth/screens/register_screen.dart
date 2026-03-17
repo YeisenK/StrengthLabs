@@ -4,20 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  final VoidCallback onRegisterTap;
+class RegisterScreen extends ConsumerStatefulWidget {
+  final VoidCallback onLoginTap;
 
-  const LoginScreen({super.key, required this.onRegisterTap});
+  const RegisterScreen({super.key, required this.onLoginTap});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen>
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
   bool _isLoading = false;
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
@@ -35,17 +39,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _fadeCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleRegister() async {
+    final password = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
+
+    if (password != confirm) {
+      ref.read(authProvider.notifier).setError('Las contraseñas no coinciden');
+      return;
+    }
+
     setState(() => _isLoading = true);
-    await ref.read(authProvider.notifier).login(
-          _emailController.text.trim(),
-          _passwordController.text,
+    await ref.read(authProvider.notifier).register(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: password,
         );
     if (mounted) setState(() => _isLoading = false);
   }
@@ -81,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                       // ── Title ──
                       const Text(
-                        'STRENGTH\nLABS',
+                        'CREAR\nCUENTA',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'BarlowCondensed',
@@ -102,8 +119,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           color: AppColors.accent2,
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 36),
 
+                      // ── Nombre y Apellido ──
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SLTextField(
+                              label: 'NOMBRE',
+                              controller: _firstNameController,
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _SLTextField(
+                              label: 'APELLIDO',
+                              controller: _lastNameController,
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Email ──
                       _SLTextField(
                         label: 'EMAIL',
                         controller: _emailController,
@@ -111,6 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                       const SizedBox(height: 16),
 
+                      // ── Contraseña ──
                       _SLTextField(
                         label: 'CONTRASEÑA',
                         controller: _passwordController,
@@ -127,7 +168,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
 
+                      // ── Confirmar contraseña ──
+                      _SLTextField(
+                        label: 'CONFIRMAR CONTRASEÑA',
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirm,
+                        suffix: GestureDetector(
+                          onTap: () =>
+                              setState(() => _obscureConfirm = !_obscureConfirm),
+                          child: Icon(
+                            _obscureConfirm
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 18,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+
+                      // ── Error message ──
                       if (errorMsg != null) ...[
                         const SizedBox(height: 12),
                         Container(
@@ -153,72 +214,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         ),
                       ],
 
-                      // ── Forgot password ──
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 0),
-                          ),
-                          child: const Text(
-                            '¿Olvidaste tu contraseña?',
-                            style: TextStyle(
-                              fontFamily: 'ShareTechMono',
-                              fontSize: 10,
-                              letterSpacing: 0.5,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 24),
 
-                      // ── Login button ──
+                      // ── Register button ──
                       _SLPrimaryButton(
-                        label: 'INICIAR SESIÓN',
+                        label: 'CREAR CUENTA',
                         isLoading: _isLoading,
-                        onTap: _handleLogin,
+                        onTap: _handleRegister,
                       ),
-                      const SizedBox(height: 28),
-
-                      // ── Divider ──
-                      const Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                              color: AppColors.border2,
-                              thickness: 1,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 14),
-                            child: Text(
-                              'O CONTINUAR CON',
-                              style: TextStyle(
-                                fontFamily: 'ShareTechMono',
-                                fontSize: 9,
-                                letterSpacing: 2,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                              color: AppColors.border2,
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── Google button ──
-                      _SLGoogleButton(onTap: () {}),
                       const SizedBox(height: 32),
 
-                      // ── Register link ──
+                      // ── Login link ──
                       RichText(
                         text: TextSpan(
                           style: const TextStyle(
@@ -228,12 +234,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             letterSpacing: 0.5,
                           ),
                           children: [
-                            const TextSpan(text: '¿No tienes cuenta? '),
+                            const TextSpan(text: '¿Ya tienes cuenta? '),
                             WidgetSpan(
                               child: GestureDetector(
-                                onTap: widget.onRegisterTap,
+                                onTap: widget.onLoginTap,
                                 child: const Text(
-                                  'Regístrate gratis',
+                                  'Iniciar sesión',
                                   style: TextStyle(
                                     fontFamily: 'ShareTechMono',
                                     fontSize: 11,
@@ -260,6 +266,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 }
 
+// ─────────────────────────────────────────────────────────
+// GRID BACKGROUND
+// ─────────────────────────────────────────────────────────
 class _GridBackground extends StatelessWidget {
   const _GridBackground();
 
@@ -293,6 +302,9 @@ class _GridPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// ─────────────────────────────────────────────────────────
+// LOGO BADGE
+// ─────────────────────────────────────────────────────────
 class _LogoBadge extends StatelessWidget {
   const _LogoBadge();
 
@@ -322,11 +334,15 @@ class _LogoBadge extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────
+// TEXT FIELD
+// ─────────────────────────────────────────────────────────
 class _SLTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final TextCapitalization textCapitalization;
   final Widget? suffix;
 
   const _SLTextField({
@@ -334,6 +350,7 @@ class _SLTextField extends StatelessWidget {
     required this.controller,
     this.obscureText = false,
     this.keyboardType,
+    this.textCapitalization = TextCapitalization.none,
     this.suffix,
   });
 
@@ -362,6 +379,7 @@ class _SLTextField extends StatelessWidget {
             controller: controller,
             obscureText: obscureText,
             keyboardType: keyboardType,
+            textCapitalization: textCapitalization,
             style: const TextStyle(
               fontFamily: 'ShareTechMono',
               fontSize: 13,
@@ -391,6 +409,9 @@ class _SLTextField extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────
+// PRIMARY BUTTON
+// ─────────────────────────────────────────────────────────
 class _SLPrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
@@ -427,8 +448,7 @@ class _SLPrimaryButton extends StatelessWidget {
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.bg),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.bg),
                 ),
               )
             : Text(
@@ -444,104 +464,4 @@ class _SLPrimaryButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SLGoogleButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _SLGoogleButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        height: 52,
-        decoration: BoxDecoration(
-          color: AppColors.surface2,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border2, width: 1),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _GoogleIcon(),
-            const SizedBox(width: 12),
-            const Text(
-              'Google',
-              style: TextStyle(
-                fontFamily: 'BarlowCondensed',
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-                letterSpacing: 1,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GoogleIcon extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20,
-      height: 20,
-      child: CustomPaint(painter: _GoogleIconPainter()),
-    );
-  }
-}
-
-class _GoogleIconPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width / 2;
-
-    final paintBlue = Paint()..color = const Color(0xFF4285F4);
-    final paintRed = Paint()..color = const Color(0xFFEA4335);
-    final paintYellow = Paint()..color = const Color(0xFFFBBC05);
-    final paintGreen = Paint()..color = const Color(0xFF34A853);
-
-    canvas.drawArc(
-      Rect.fromCircle(center: c, radius: r),
-      -1.57,
-      1.57,
-      false,
-      paintBlue..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22,
-    );
-    canvas.drawArc(
-      Rect.fromCircle(center: c, radius: r),
-      0,
-      1.57,
-      false,
-      paintGreen..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22,
-    );
-    canvas.drawArc(
-      Rect.fromCircle(center: c, radius: r),
-      1.57,
-      1.57,
-      false,
-      paintYellow..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22,
-    );
-    canvas.drawArc(
-      Rect.fromCircle(center: c, radius: r),
-      3.14,
-      1.57,
-      false,
-      paintRed..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22,
-    );
-
-    canvas.drawRect(
-      Rect.fromLTWH(c.dx, c.dy - size.height * 0.13, r, size.height * 0.26),
-      Paint()..color = const Color(0xFF4285F4),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

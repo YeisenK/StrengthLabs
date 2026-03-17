@@ -35,7 +35,7 @@ class TrainingSession {
           id: '1',
           date: DateTime.now().subtract(const Duration(days: 1)),
           exercises: [
-            ExerciseLog(
+            const ExerciseLog(
               name: 'Sentadilla Trasera',
               muscleGroup: 'Cuádriceps · Glúteos',
               sets: [
@@ -44,7 +44,7 @@ class TrainingSession {
                 SetLog(weight: 82.5, reps: 6, rpe: 9, rir: 0),
               ],
             ),
-            ExerciseLog(
+            const ExerciseLog(
               name: 'Press Banca',
               muscleGroup: 'Pectoral · Tríceps',
               sets: [
