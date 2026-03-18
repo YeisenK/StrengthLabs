@@ -170,14 +170,7 @@ class ACWRBar extends StatelessWidget {
 
   const ACWRBar({super.key, required this.acwr});
 
-  Color get _indicatorColor {
-    if (acwr < 0.8) return AppColors.riskGreen;
-    if (acwr <= 1.3) return AppColors.accent4;
-    if (acwr <= 1.5) return AppColors.accent3;
-    return AppColors.riskRed;
-  }
-
-  double get _fill => ((acwr - 0.5) / 1.2).clamp(0.0, 1.0);
+  double get _fill => (acwr / 2.0).clamp(0.0, 1.0);
 
   @override
   Widget build(BuildContext context) {
@@ -190,11 +183,11 @@ class ACWRBar extends StatelessWidget {
             const SLSectionLabel('ACWR · RELACIÓN'),
             Text(
               acwr.toStringAsFixed(2),
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'BarlowCondensed',
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: _indicatorColor,
+                color: AppColors.accent4,
               ),
             ),
           ],
@@ -216,13 +209,7 @@ class ACWRBar extends StatelessWidget {
                 child: Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppColors.accent,
-                        AppColors.accent4,
-                        AppColors.riskRed,
-                      ],
-                    ),
+                    color: AppColors.accent4,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -230,35 +217,14 @@ class ACWRBar extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '0.8 BAJO',
-              style: TextStyle(
-                fontFamily: 'ShareTechMono',
-                fontSize: 8,
-                color: AppColors.riskGreen,
-              ),
-            ),
-            Text(
-              '1.0 – 1.3 ÓPTIMO',
-              style: TextStyle(
-                fontFamily: 'ShareTechMono',
-                fontSize: 8,
-                color: AppColors.accent4,
-              ),
-            ),
-            Text(
-              '1.5+ ALTO',
-              style: TextStyle(
-                fontFamily: 'ShareTechMono',
-                fontSize: 8,
-                color: AppColors.riskRed,
-              ),
-            ),
-          ],
+        const SizedBox(height: 6),
+        const Text(
+          'Relación de carga aguda y crónica reportada por el backend.',
+          style: TextStyle(
+            fontFamily: 'ShareTechMono',
+            fontSize: 8,
+            color: AppColors.textMuted,
+          ),
         ),
       ],
     );
@@ -341,8 +307,10 @@ class _ChartPainter extends CustomPainter {
     final minV = allVals.reduce((a, b) => a < b ? a : b) - 5;
     final maxV = allVals.reduce((a, b) => a > b ? a : b) + 5;
 
-    double xOf(int i) => data.length == 1 ? size.width : i / (data.length - 1) * size.width;
-    double yOf(double v) => size.height - ((v - minV) / (maxV - minV)) * size.height;
+    double xOf(int i) =>
+        data.length == 1 ? size.width : i / (data.length - 1) * size.width;
+    double yOf(double v) =>
+        size.height - ((v - minV) / (maxV - minV)) * size.height;
 
     final atlPath = Path();
     atlPath.moveTo(xOf(0), yOf(data.first.atl));
@@ -366,8 +334,22 @@ class _ChartPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
     );
 
-    _drawLine(canvas, data.map((d) => d.ctl).toList(), AppColors.accent4, 1.5, xOf, yOf);
-    _drawLine(canvas, data.map((d) => d.atl).toList(), AppColors.accent2, 2, xOf, yOf);
+    _drawLine(
+      canvas,
+      data.map((d) => d.ctl).toList(),
+      AppColors.accent4,
+      1.5,
+      xOf,
+      yOf,
+    );
+    _drawLine(
+      canvas,
+      data.map((d) => d.atl).toList(),
+      AppColors.accent2,
+      2,
+      xOf,
+      yOf,
+    );
 
     canvas.drawCircle(
       Offset(xOf(data.length - 1), yOf(data.last.atl)),
@@ -573,7 +555,9 @@ class RecentSessionsCard extends StatelessWidget {
                   ),
                   child: _RecentSessionItem(
                     session: session,
-                    onTap: onSessionTap == null ? null : () => onSessionTap!(session),
+                    onTap: onSessionTap == null
+                        ? null
+                        : () => onSessionTap!(session),
                   ),
                 );
               },
