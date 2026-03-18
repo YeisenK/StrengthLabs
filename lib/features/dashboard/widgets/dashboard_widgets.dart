@@ -34,7 +34,6 @@ class TSBHeroCard extends StatelessWidget {
       backgroundColor: accentColor.withOpacity(0.06),
       child: Stack(
         children: [
-          // Watermark
           Positioned(
             right: -8,
             top: 0,
@@ -55,7 +54,7 @@ class TSBHeroCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SLSectionLabel('TRAINING STRESS BALANCE'),
+              const SLSectionLabel('BALANCE DE ESTRÉS DE ENTRENAMIENTO'),
               const SizedBox(height: 6),
               Text(
                 metrics.tsb >= 0
@@ -101,7 +100,7 @@ class MetricsRow extends StatelessWidget {
           child: _MetricCard(
             label: 'CARGA AGUDA · ATL',
             value: metrics.atl.toStringAsFixed(0),
-            sub: '7-day rolling avg',
+            sub: 'Promedio móvil de 7 días',
             color: AppColors.accent2,
           ),
         ),
@@ -110,7 +109,7 @@ class MetricsRow extends StatelessWidget {
           child: _MetricCard(
             label: 'CARGA CRÓNICA · CTL',
             value: metrics.ctl.toStringAsFixed(0),
-            sub: '28-day rolling avg',
+            sub: 'Promedio móvil de 28 días',
             color: AppColors.accent4,
           ),
         ),
@@ -188,7 +187,7 @@ class ACWRBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SLSectionLabel('ACWR — RATIO'),
+            const SLSectionLabel('ACWR · RELACIÓN'),
             Text(
               acwr.toStringAsFixed(2),
               style: TextStyle(
@@ -281,8 +280,8 @@ class ATLCTLMiniChart extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SLSectionLabel('ATL / CTL — ÚLTIMAS 4 SEMANAS'),
-              SLTag('LIVE', variant: TagVariant.cyan),
+              SLSectionLabel('ATL / CTL · ÚLTIMAS 4 SEMANAS'),
+              SLTag('ACTIVO', variant: TagVariant.cyan),
             ],
           ),
           const SizedBox(height: 12),
@@ -342,10 +341,9 @@ class _ChartPainter extends CustomPainter {
     final minV = allVals.reduce((a, b) => a < b ? a : b) - 5;
     final maxV = allVals.reduce((a, b) => a > b ? a : b) + 5;
 
-    double xOf(int i) => i / (data.length - 1) * size.width;
+    double xOf(int i) => data.length == 1 ? size.width : i / (data.length - 1) * size.width;
     double yOf(double v) => size.height - ((v - minV) / (maxV - minV)) * size.height;
 
-    // ATL area fill
     final atlPath = Path();
     atlPath.moveTo(xOf(0), yOf(data.first.atl));
     for (int i = 1; i < data.length; i++) {
@@ -362,21 +360,15 @@ class _ChartPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            // ignore: deprecated_member_use
             AppColors.accent2.withOpacity(0.2),
-            // ignore: deprecated_member_use
             AppColors.accent2.withOpacity(0),
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
     );
 
-    // CTL line
-    _drawLine(canvas, size, data.map((d) => d.ctl).toList(), AppColors.accent4, 1.5, xOf, yOf);
+    _drawLine(canvas, data.map((d) => d.ctl).toList(), AppColors.accent4, 1.5, xOf, yOf);
+    _drawLine(canvas, data.map((d) => d.atl).toList(), AppColors.accent2, 2, xOf, yOf);
 
-    // ATL line
-    _drawLine(canvas, size, data.map((d) => d.atl).toList(), AppColors.accent2, 2, xOf, yOf);
-
-    // Current point dots
     canvas.drawCircle(
       Offset(xOf(data.length - 1), yOf(data.last.atl)),
       3,
@@ -391,7 +383,6 @@ class _ChartPainter extends CustomPainter {
 
   void _drawLine(
     Canvas canvas,
-    Size size,
     List<double> values,
     Color color,
     double strokeWidth,
@@ -446,12 +437,12 @@ class QuickActionsRow extends StatelessWidget {
                   Text('💪', style: TextStyle(fontSize: 16)),
                   SizedBox(width: 6),
                   Text(
-                    'LOG SESIÓN',
+                    'REGISTRAR SESIÓN',
                     style: TextStyle(
                       fontFamily: 'BarlowCondensed',
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
-                      letterSpacing: 2,
+                      letterSpacing: 1.5,
                       color: AppColors.bg,
                     ),
                   ),
@@ -482,7 +473,7 @@ class QuickActionsRow extends StatelessWidget {
                       fontFamily: 'BarlowCondensed',
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
-                      letterSpacing: 2,
+                      letterSpacing: 1.5,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -492,6 +483,199 @@ class QuickActionsRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class RecentSessionsCard extends StatelessWidget {
+  final List<RecentSession> sessions;
+  final ValueChanged<RecentSession>? onSessionTap;
+  final VoidCallback? onViewAll;
+
+  const RecentSessionsCard({
+    super.key,
+    required this.sessions,
+    this.onSessionTap,
+    this.onViewAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleSessions = sessions.take(5).toList();
+
+    return SLCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SLSectionLabel('SESIONES RECIENTES'),
+              if (sessions.isNotEmpty && onViewAll != null)
+                GestureDetector(
+                  onTap: onViewAll,
+                  child: const Text(
+                    'VER TODAS',
+                    style: TextStyle(
+                      fontFamily: 'ShareTechMono',
+                      fontSize: 9,
+                      color: AppColors.accent4,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (sessions.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surface2,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SIN SESIONES',
+                    style: TextStyle(
+                      fontFamily: 'BarlowCondensed',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      height: 1,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'No hay sesiones recientes registradas.',
+                    style: TextStyle(
+                      fontFamily: 'ShareTechMono',
+                      fontSize: 10,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...visibleSessions.asMap().entries.map(
+              (entry) {
+                final index = entry.key;
+                final session = entry.value;
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index == visibleSessions.length - 1 ? 0 : 10,
+                  ),
+                  child: _RecentSessionItem(
+                    session: session,
+                    onTap: onSessionTap == null ? null : () => onSessionTap!(session),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentSessionItem extends StatelessWidget {
+  final RecentSession session;
+  final VoidCallback? onTap;
+
+  const _RecentSessionItem({
+    required this.session,
+    this.onTap,
+  });
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day/$month';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.surface2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.surface3,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: Text(
+                '🏋️',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'BarlowCondensed',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_formatDate(session.date)} · ${session.durationMinutes} min · RPE ${session.rpe.toStringAsFixed(1)} · Carga ${session.load.toStringAsFixed(0)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'ShareTechMono',
+                    fontSize: 9,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null) ...[
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+              size: 18,
+            ),
+          ],
+        ],
+      ),
+    );
+
+    if (onTap == null) return child;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: child,
+      ),
     );
   }
 }
