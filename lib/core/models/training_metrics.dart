@@ -6,11 +6,11 @@ enum RiskLevel {
   String get label {
     switch (this) {
       case RiskLevel.green:
-        return 'OPTIMAL';
+        return 'ÓPTIMO';
       case RiskLevel.yellow:
-        return 'CAUTION';
+        return 'PRECAUCIÓN';
       case RiskLevel.red:
-        return 'HIGH';
+        return 'ALTO';
     }
   }
 }
@@ -21,6 +21,7 @@ class TrainingMetrics {
   final double acwr;
   final double tsb;
   final String riskZone;
+  final String? tsbStatus;
   final List<RecentSession> recentSessions;
   final List<ChartPoint> history;
 
@@ -30,50 +31,52 @@ class TrainingMetrics {
     required this.acwr,
     required this.tsb,
     required this.riskZone,
+    required this.tsbStatus,
     required this.recentSessions,
     required this.history,
   });
 
-  factory TrainingMetrics.fromJson(Map<String, dynamic> json) {
+  factory TrainingMetrics.fromJson(Map json) {
     return TrainingMetrics(
       atl: (json['atl'] ?? 0).toDouble(),
       ctl: (json['ctl'] ?? 0).toDouble(),
       acwr: (json['acwr'] ?? 0).toDouble(),
       tsb: (json['tsb'] ?? 0).toDouble(),
-      riskZone: (json['riskZone'] ?? 'LOW').toString(),
-      recentSessions: (json['recentSessions'] as List<dynamic>? ?? [])
-          .map((e) => RecentSession.fromJson(e as Map<String, dynamic>))
+      riskZone: (json['riskZone'] ?? '').toString(),
+      tsbStatus: json['tsbStatus']?.toString(),
+      recentSessions: (json['recentSessions'] as List? ?? [])
+          .map((e) => RecentSession.fromJson(e as Map))
           .toList(),
-      history: (json['history'] as List<dynamic>? ?? [])
-          .map((e) => ChartPoint.fromJson(e as Map<String, dynamic>))
+      history: (json['history'] as List? ?? [])
+          .map((e) => ChartPoint.fromJson(e as Map))
           .toList(),
     );
   }
 
   RiskLevel get riskLevel {
-    final zone = riskZone.toUpperCase();
-
-    switch (zone) {
-      case 'LOW':
-        return RiskLevel.yellow;
+    switch (riskZone.trim().toUpperCase()) {
       case 'OPTIMAL':
+      case 'ÓPTIMO':
         return RiskLevel.green;
       case 'CAUTION':
+      case 'LOW':
+      case 'PRECAUCIÓN':
+      case 'BAJO':
         return RiskLevel.yellow;
       case 'HIGH':
+      case 'ALTO':
         return RiskLevel.red;
       default:
-        if (acwr > 1.5) return RiskLevel.red;
-        if (acwr >= 0.8 && acwr <= 1.3) return RiskLevel.green;
         return RiskLevel.yellow;
     }
   }
 
   String get tsbLabel {
-    if (tsb >= 10) return 'FRESH';
-    if (tsb >= 0) return 'READY';
-    if (tsb >= -10) return 'NORMAL FATIGUE';
-    return 'HIGH FATIGUE';
+    final backendLabel = tsbStatus?.trim();
+    if (backendLabel != null && backendLabel.isNotEmpty) {
+      return backendLabel.toUpperCase();
+    }
+    return 'ESTADO NO DISPONIBLE';
   }
 }
 
@@ -94,7 +97,7 @@ class RecentSession {
     required this.load,
   });
 
-  factory RecentSession.fromJson(Map<String, dynamic> json) {
+  factory RecentSession.fromJson(Map json) {
     return RecentSession(
       id: (json['id'] ?? '').toString(),
       title: (json['title'] ?? json['name'] ?? 'Sesión').toString(),
@@ -125,7 +128,7 @@ class ChartPoint {
     required this.tsb,
   });
 
-  factory ChartPoint.fromJson(Map<String, dynamic> json) {
+  factory ChartPoint.fromJson(Map json) {
     return ChartPoint(
       date: DateTime.tryParse((json['date'] ?? '').toString()) ?? DateTime.now(),
       atl: (json['atl'] ?? 0).toDouble(),
