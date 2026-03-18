@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../providers/metrics_provider.dart';
 import '../widgets/dashboard_widgets.dart';
+import 'session_detail_screen.dart';
+import 'sessions_history_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -12,7 +14,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final metricsAsync = ref.watch(metricsProvider);
-    final chartAsync = ref.watch(chartHistoryProvider);
     final authState = ref.watch(authProvider);
     final userName = authState is AuthAuthenticated
         ? authState.user.firstName
@@ -42,7 +43,7 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
       data: (metrics) {
-        final chartData = chartAsync.valueOrNull ?? [];
+        final chartData = metrics.history;
 
         return Scaffold(
           body: SafeArea(
@@ -57,22 +58,18 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       const SizedBox(height: 20),
 
-                      // 1. TSB Hero
                       TSBHeroCard(metrics: metrics),
                       const SizedBox(height: 12),
 
-                      // 2. ATL / CTL
                       MetricsRow(metrics: metrics),
                       const SizedBox(height: 12),
 
-                      // 3. ACWR
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
@@ -84,11 +81,9 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // 4. ATL/CTL chart
                       ATLCTLMiniChart(data: chartData),
                       const SizedBox(height: 12),
 
-                      // 5. Quick Actions
                       QuickActionsRow(
                         onLogSession: () => Navigator.push(
                           context,
@@ -109,6 +104,30 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 12),
+
+                      RecentSessionsCard(
+                        sessions: metrics.recentSessions,
+                        onSessionTap: (session) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SessionDetailScreen(session: session),
+                            ),
+                          );
+                        },
+                        onViewAll: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SessionsHistoryScreen(
+                                sessions: metrics.recentSessions,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
                       const SizedBox(height: 24),
                     ]),
                   ),
@@ -161,7 +180,6 @@ class _DashboardHeader extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        // Notification bell
         Container(
           width: 40,
           height: 40,
@@ -177,7 +195,6 @@ class _DashboardHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        // Avatar
         Container(
           width: 40,
           height: 40,

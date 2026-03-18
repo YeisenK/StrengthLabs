@@ -1,37 +1,62 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+
 import '../../../core/models/training_metrics.dart';
+import '../../auth/providers/auth_provider.dart';
 
-// ─────────────────────────────────────────────────────────
-// REPOSITORY
-// TODO: inject Dio and fetch from real API:
-//   GET /users/{id}/metrics  → TrainingMetrics
-//   GET /users/{id}/metrics/history?days=28 → List<ChartPoint>
-// ─────────────────────────────────────────────────────────
 class MetricsRepository {
-  const MetricsRepository();
+  final http.Client client;
+  final String baseUrl;
+  final String token;
 
-  Future<TrainingMetrics> fetchMetrics() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return TrainingMetrics.mock();
-  }
+  const MetricsRepository({
+    required this.client,
+    required this.baseUrl,
+    required this.token,
+  });
 
-  Future<List<ChartPoint>> fetchHistory() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return ChartPoint.mockHistory();
+  Future<TrainingMetrics> fetchDashboard() async {
+    final response = await client.get(
+      Uri.parse('$baseUrl/api/v1/dashboard'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error ${response.statusCode}: ${response.body}');
+    }
+
+    final Map<String, dynamic> jsonMap =
+        jsonDecode(response.body) as Map<String, dynamic>;
+
+    return TrainingMetrics.fromJson(jsonMap);
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// PROVIDERS
-// ─────────────────────────────────────────────────────────
-final metricsRepositoryProvider = Provider<MetricsRepository>(
-  (_) => const MetricsRepository(),
-);
-
-final metricsProvider = FutureProvider<TrainingMetrics>((ref) {
-  return ref.read(metricsRepositoryProvider).fetchMetrics();
+final httpClientProvider = Provider<http.Client>((ref) {
+  return http.Client();
 });
 
-final chartHistoryProvider = FutureProvider<List<ChartPoint>>((ref) {
-  return ref.read(metricsRepositoryProvider).fetchHistory();
+final metricsRepositoryProvider = Provider<MetricsRepository>((ref) {
+  final authState = ref.watch(authProvider);
+
+  if (authState is! AuthAuthenticated) {
+    throw Exception('Usuario no autenticado');
+  }
+
+  return MetricsRepository(
+    client: ref.watch(httpClientProvider),
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8080',
+    ),
+    token: authState.user.token,
+  );
+});
+
+final metricsProvider = FutureProvider<TrainingMetrics>((ref) async {
+  return ref.watch(metricsRepositoryProvider).fetchDashboard();
 });
