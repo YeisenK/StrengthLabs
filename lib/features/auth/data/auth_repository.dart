@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:strengthlabs_beta/core/constants/api_constants.dart';
 import 'package:strengthlabs_beta/core/network/dio_client.dart';
 import 'package:strengthlabs_beta/core/storage/secure_storage.dart';
