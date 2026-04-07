@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:strengthlabs_beta/core/constants/app_colors.dart';
 import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
 import 'package:strengthlabs_beta/core/router/app_router.dart';
-import 'package:strengthlabs_beta/core/storage/secure_storage.dart';
 import 'package:strengthlabs_beta/core/storage/workout_local_storage.dart';
 import 'package:strengthlabs_beta/features/auth/data/auth_repository.dart';
 import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
@@ -16,7 +13,6 @@ import 'package:strengthlabs_beta/features/plan/data/plan_repository.dart';
 import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_cubit.dart';
 import 'package:strengthlabs_beta/features/routines/data/routine_repository.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/data/workout_repository.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
 
 class App extends StatefulWidget {
@@ -27,29 +23,16 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  late final SecureStorage _secureStorage;
-  late final DioClient _dioClient;
   late final WorkoutLocalStorage _workoutStorage;
-  late final AuthRepository _authRepo;
-  late final WorkoutRepository _workoutRepo;
   late final FatigueRepository _fatigueRepo;
-  late final RoutineRepository _routineRepo;
   late final ComputeRepository _computeRepo;
   late final PlanRepository _planRepo;
 
   @override
   void initState() {
     super.initState();
-    _secureStorage = const SecureStorage(FlutterSecureStorage());
-    _dioClient = DioClient(
-      _secureStorage,
-      onUnauthorized: () => AppRouter.router.go('/login'),
-    );
     _workoutStorage = WorkoutLocalStorage();
-    _authRepo = AuthRepository(_dioClient, _secureStorage);
-    _workoutRepo = WorkoutRepository(_dioClient);
-    _fatigueRepo = FatigueRepository(_dioClient);
-    _routineRepo = RoutineRepository(_dioClient);
+    _fatigueRepo = FatigueRepository(_workoutStorage);
     _computeRepo = ComputeRepository(_workoutStorage);
     _planRepo = PlanRepository(_computeRepo);
   }
@@ -58,9 +41,9 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => AuthCubit(_authRepo)),
-        BlocProvider(create: (_) => WorkoutsCubit(_workoutRepo)),
-        BlocProvider(create: (_) => RoutinesCubit(_routineRepo)),
+        BlocProvider(create: (_) => AuthCubit(const AuthRepository())),
+        BlocProvider(create: (_) => WorkoutsCubit()),
+        BlocProvider(create: (_) => RoutinesCubit(const RoutineRepository())),
         BlocProvider(
           create: (_) => FatigueCubit(_fatigueRepo, _computeRepo),
         ),

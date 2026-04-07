@@ -1,21 +1,18 @@
-import 'package:strengthlabs_beta/core/constants/api_constants.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/core/storage/secure_storage.dart';
 import 'package:strengthlabs_beta/features/auth/domain/entities/user.dart';
 
 class AuthRepository {
-  const AuthRepository(this._client, this._storage);
+  const AuthRepository();
 
-  final DioClient _client;
-  final SecureStorage _storage;
+  static const _demoEmail = 'example@example.com';
+  static const _demoPassword = 'example';
 
   Future<User> login({required String email, required String password}) async {
-    final resp = await _client.dio.post(
-      ApiConstants.login,
-      data: {'email': email, 'password': password},
-    );
-    await _saveTokens(resp.data);
-    return _fetchMe();
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (email.trim().toLowerCase() == _demoEmail &&
+        password == _demoPassword) {
+      return const User(id: 'demo', name: 'Demo User', email: _demoEmail);
+    }
+    throw Exception('Invalid email or password');
   }
 
   Future<User> register({
@@ -23,33 +20,13 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    final resp = await _client.dio.post(
-      ApiConstants.register,
-      data: {'name': name, 'email': email, 'password': password},
-    );
-    await _saveTokens(resp.data);
-    return _fetchMe();
-  }
-
-  Future<User> getMe() => _fetchMe();
-
-  Future<void> logout() => _storage.clearTokens();
-
-  // ── helpers ────────────────────────────────────────────────────────────────
-
-  Future<void> _saveTokens(Map<String, dynamic> data) =>
-      _storage.saveTokens(
-        accessToken: data['access_token'] as String,
-        refreshToken: data['refresh_token'] as String,
-      );
-
-  Future<User> _fetchMe() async {
-    final resp = await _client.dio.get(ApiConstants.me);
-    final d = resp.data as Map<String, dynamic>;
+    await Future.delayed(const Duration(milliseconds: 300));
     return User(
-      id: d['id'] as String,
-      name: d['name'] as String,
-      email: d['email'] as String,
+      id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+      name: name,
+      email: email,
     );
   }
+
+  Future<void> logout() async {}
 }

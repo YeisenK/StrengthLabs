@@ -22,9 +22,7 @@ class PlanCubit extends Cubit<PlanState> {
       );
       emit(PlanLoaded(plan));
     } catch (_) {
-      emit(const PlanError(
-        'Could not generate plan. Make sure the compute server is running.',
-      ));
+      emit(const PlanError('Could not generate training plan. Please try again.'));
     }
   }
 }
