@@ -1,27 +1,24 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/auth/domain/entities/user.dart';
+import 'package:strengthlabs_beta/features/auth/data/auth_repository.dart';
 import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit() : super(const AuthInitial());
+  AuthCubit(this._repository) : super(const AuthInitial());
 
-  // Mock user — replace with real API calls when backend is ready
-  static const _mockUser = User(
-    id: '1',
-    name: 'Example User',
-    email: 'example@example.com',
-  );
+  final AuthRepository _repository;
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     emit(const AuthLoading());
-    await Future.delayed(const Duration(milliseconds: 800)); // simulate network
-
-    // TODO: call AuthRepository.login(email, password)
-    // Store tokens via SecureStorage, then emit authenticated
-    emit(const AuthAuthenticated(_mockUser));
+    try {
+      final user = await _repository.login(email: email, password: password);
+      emit(AuthAuthenticated(user));
+    } on DioException catch (e) {
+      final msg = e.response?.data?['detail'] as String? ?? 'Login failed';
+      emit(AuthError(msg));
+    } catch (_) {
+      emit(const AuthError('Unexpected error — please try again'));
+    }
   }
 
   Future<void> register({
@@ -30,14 +27,23 @@ class AuthCubit extends Cubit<AuthState> {
     required String password,
   }) async {
     emit(const AuthLoading());
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    // TODO: call AuthRepository.register(name, email, password)
-    emit(const AuthAuthenticated(_mockUser));
+    try {
+      final user = await _repository.register(
+        name: name,
+        email: email,
+        password: password,
+      );
+      emit(AuthAuthenticated(user));
+    } on DioException catch (e) {
+      final msg = e.response?.data?['detail'] as String? ?? 'Registration failed';
+      emit(AuthError(msg));
+    } catch (_) {
+      emit(const AuthError('Unexpected error — please try again'));
+    }
   }
 
   Future<void> logout() async {
-    // TODO: clear tokens from SecureStorage
+    await _repository.logout();
     emit(const AuthUnauthenticated());
   }
 }

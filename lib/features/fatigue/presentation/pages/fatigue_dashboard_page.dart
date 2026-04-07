@@ -34,6 +34,12 @@ class _FatigueDashboardPageState extends State<FatigueDashboardPage> {
               AppStrings.fatigue,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh_outlined),
+                onPressed: () => context.read<FatigueCubit>().loadSummary(),
+              ),
+            ],
           ),
           BlocBuilder<FatigueCubit, FatigueState>(
             builder: (context, state) {
@@ -47,8 +53,19 @@ class _FatigueDashboardPageState extends State<FatigueDashboardPage> {
                   padding: const EdgeInsets.all(16),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      _FatigueGaugeCard(summary: state.summary),
+                      _ReadinessCard(summary: state.summary),
                       const SizedBox(height: 16),
+                      if (state.summary.hasComputeData) ...[
+                        _MetricsRow(summary: state.summary),
+                        const SizedBox(height: 16),
+                        _RiskCard(summary: state.summary),
+                        const SizedBox(height: 16),
+                        if (state.summary.recommendations.isNotEmpty)
+                          _RecommendationsCard(
+                              summary: state.summary),
+                        if (state.summary.recommendations.isNotEmpty)
+                          const SizedBox(height: 16),
+                      ],
                       _WeeklyTrendCard(summary: state.summary),
                       const SizedBox(height: 16),
                       _MuscleVolumeCard(summary: state.summary),
@@ -66,30 +83,39 @@ class _FatigueDashboardPageState extends State<FatigueDashboardPage> {
   }
 }
 
-class _FatigueGaugeCard extends StatelessWidget {
-  const _FatigueGaugeCard({required this.summary});
+// ─── Readiness Gauge ─────────────────────────────────────────────────────────
+
+class _ReadinessCard extends StatelessWidget {
+  const _ReadinessCard({required this.summary});
   final FatigueSummary summary;
 
-  String get _statusText {
-    final i = summary.overallIndex;
-    if (i < 40) return AppStrings.fatigueLow;
-    if (i < 70) return AppStrings.fatigueMod;
-    if (i < 85) return AppStrings.fatigueHigh;
-    return AppStrings.fatigueOver;
+  String get _label {
+    final s = summary.hasComputeData
+        ? summary.readinessScore
+        : summary.overallIndex;
+    if (s >= 80) return 'Fresh';
+    if (s >= 60) return 'Ready';
+    if (s >= 40) return 'Moderate';
+    if (s >= 20) return 'Fatigued';
+    return 'Depleted';
   }
 
-  String get _statusLabel {
-    final i = summary.overallIndex;
-    if (i < 40) return 'Low';
-    if (i < 70) return 'Moderate';
-    if (i < 85) return 'High';
-    return 'Overtraining';
+  String get _subtitle {
+    if (!summary.hasComputeData) return AppStrings.fatigueLow;
+    final s = summary.readinessScore;
+    if (s >= 80) return AppStrings.fatigueLow;
+    if (s >= 60) return AppStrings.fatigueMod;
+    if (s >= 40) return AppStrings.fatigueHigh;
+    return AppStrings.fatigueOver;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = AppColors.fatigueColor(summary.overallIndex);
+    final score = summary.hasComputeData
+        ? summary.readinessScore
+        : summary.overallIndex;
+    final color = AppColors.fatigueColor(score);
 
     return Card(
       child: Padding(
@@ -97,7 +123,7 @@ class _FatigueGaugeCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              AppStrings.overallFatigue,
+              summary.hasComputeData ? 'Readiness Score' : AppStrings.overallFatigue,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -108,7 +134,7 @@ class _FatigueGaugeCard extends StatelessWidget {
               height: 180,
               child: CustomPaint(
                 painter: _GaugePainter(
-                  index: summary.overallIndex,
+                  index: score,
                   color: color,
                   trackColor: theme.colorScheme.surfaceVariant,
                 ),
@@ -117,7 +143,7 @@ class _FatigueGaugeCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${summary.overallIndex.toInt()}',
+                        '${score.toInt()}',
                         style: theme.textTheme.displayMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: color,
@@ -142,7 +168,7 @@ class _FatigueGaugeCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                _statusLabel,
+                _label,
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w600,
@@ -151,18 +177,30 @@ class _FatigueGaugeCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              _statusText,
+              _subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
+            if (!summary.hasComputeData) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Connect compute server for detailed metrics',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 }
+
+// ─── Gauge Painter ────────────────────────────────────────────────────────────
 
 class _GaugePainter extends CustomPainter {
   _GaugePainter({
@@ -201,11 +239,10 @@ class _GaugePainter extends CustomPainter {
       false,
       trackPaint,
     );
-
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       startAngle,
-      sweepAngle * (index / 100),
+      sweepAngle * (index / 100).clamp(0, 1),
       false,
       valuePaint,
     );
@@ -215,6 +252,337 @@ class _GaugePainter extends CustomPainter {
   bool shouldRepaint(_GaugePainter old) =>
       old.index != index || old.color != color;
 }
+
+// ─── Metrics Row (ATL / CTL / TSB / ACWR) ────────────────────────────────────
+
+class _MetricsRow extends StatelessWidget {
+  const _MetricsRow({required this.summary});
+  final FatigueSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _MetricTile(
+            label: 'ATL',
+            value: summary.atl.toStringAsFixed(1),
+            subtitle: 'Acute load',
+            hint: '7-day avg',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _MetricTile(
+            label: 'CTL',
+            value: summary.ctl.toStringAsFixed(1),
+            subtitle: 'Chronic load',
+            hint: '42-day avg',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _MetricTile(
+            label: 'TSB',
+            value: '${summary.tsb >= 0 ? '+' : ''}${summary.tsb.toStringAsFixed(1)}',
+            subtitle: 'Balance',
+            valueColor: summary.tsb >= 0 ? const Color(0xFF4CAF50) : const Color(0xFFEF5350),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _MetricTile(
+            label: 'ACWR',
+            value: summary.acwr.toStringAsFixed(2),
+            subtitle: 'Workload ratio',
+            valueColor: _acwrColor(summary.acwr),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _acwrColor(double acwr) {
+    if (acwr < 0.8 || acwr > 1.5) return const Color(0xFFEF5350);
+    if (acwr > 1.3) return const Color(0xFFFF9800);
+    return const Color(0xFF4CAF50);
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.label,
+    required this.value,
+    required this.subtitle,
+    this.hint,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final String subtitle;
+  final String? hint;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: valueColor,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Risk Card ────────────────────────────────────────────────────────────────
+
+class _RiskCard extends StatelessWidget {
+  const _RiskCard({required this.summary});
+  final FatigueSummary summary;
+
+  Color _levelColor(String level) => switch (level) {
+        'low' => const Color(0xFF4CAF50),
+        'moderate' => const Color(0xFFFF9800),
+        'high' => const Color(0xFFEF5350),
+        'critical' => const Color(0xFFB71C1C),
+        _ => const Color(0xFF607D8B),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _levelColor(summary.riskLevel);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Risk Assessment',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color.withOpacity(0.4)),
+                  ),
+                  child: Text(
+                    summary.riskLevel.toUpperCase(),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _RiskBar(
+              label: 'Injury Risk',
+              value: summary.injuryRiskScore,
+            ),
+            const SizedBox(height: 10),
+            _RiskBar(
+              label: 'Overtraining Risk',
+              value: summary.overtrainingRiskScore,
+            ),
+            const SizedBox(height: 10),
+            _RiskBar(
+              label: 'Composite Risk',
+              value: summary.compositeRiskScore,
+              isBold: true,
+            ),
+            if (summary.riskFlags.isNotEmpty) ...[
+              const Divider(height: 24),
+              ...summary.riskFlags.map(
+                (flag) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.warning_amber_outlined,
+                          size: 14, color: Color(0xFFFF9800)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          flag,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RiskBar extends StatelessWidget {
+  const _RiskBar({
+    required this.label,
+    required this.value,
+    this.isBold = false,
+  });
+
+  final String label;
+  final double value;
+  final bool isBold;
+
+  Color _barColor(double v) {
+    if (v < 0.2) return const Color(0xFF4CAF50);
+    if (v < 0.45) return const Color(0xFFFF9800);
+    if (v < 0.70) return const Color(0xFFEF5350);
+    return const Color(0xFFB71C1C);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _barColor(value);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+            Text(
+              '${(value * 100).toInt()}%',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: value.clamp(0.0, 1.0),
+            minHeight: isBold ? 8 : 6,
+            backgroundColor: theme.colorScheme.surfaceVariant,
+            valueColor: AlwaysStoppedAnimation(color),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Recommendations ──────────────────────────────────────────────────────────
+
+class _RecommendationsCard extends StatelessWidget {
+  const _RecommendationsCard({required this.summary});
+  final FatigueSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.lightbulb_outline,
+                    size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Recommendations',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...summary.recommendations.map(
+              (rec) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '→',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        rec,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Weekly Trend ─────────────────────────────────────────────────────────────
 
 class _WeeklyTrendCard extends StatelessWidget {
   const _WeeklyTrendCard({required this.summary});
@@ -243,7 +611,7 @@ class _WeeklyTrendCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: points.map((p) {
-                  final pct = p.index / 100;
+                  final pct = (p.index / 100).clamp(0.0, 1.0);
                   final color = AppColors.fatigueColor(p.index);
                   final isLast = p == points.last;
                   return Expanded(
@@ -265,7 +633,9 @@ class _WeeklyTrendCard extends StatelessWidget {
                             duration: const Duration(milliseconds: 600),
                             height: 50 * pct,
                             decoration: BoxDecoration(
-                              color: isLast ? color : color.withOpacity(0.5),
+                              color: isLast
+                                  ? color
+                                  : color.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -299,6 +669,8 @@ class _WeeklyTrendCard extends StatelessWidget {
     return days[d.weekday - 1];
   }
 }
+
+// ─── Muscle Volume ────────────────────────────────────────────────────────────
 
 class _MuscleVolumeCard extends StatelessWidget {
   const _MuscleVolumeCard({required this.summary});
@@ -375,7 +747,7 @@ class _MuscleBar extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: percentage / 100,
+              value: (percentage / 100).clamp(0.0, 1.0),
               minHeight: 8,
               backgroundColor: theme.colorScheme.surfaceVariant,
               valueColor: AlwaysStoppedAnimation(color),

@@ -34,6 +34,11 @@ class MainShell extends StatelessWidget {
             label: AppStrings.fatigue,
           ),
           NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: AppStrings.plan,
+          ),
+          NavigationDestination(
             icon: Icon(Icons.download_outlined),
             selectedIcon: Icon(Icons.download),
             label: AppStrings.export_,

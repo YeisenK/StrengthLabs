@@ -21,6 +21,7 @@ class AppStrings {
   static const routines = 'Routines';
   static const fatigue = 'Fatigue';
   static const export_ = 'Export';
+  static const plan = 'Plan';
 
   // Workouts
   static const startWorkout = 'Start Workout';

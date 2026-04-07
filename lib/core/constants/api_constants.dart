@@ -6,6 +6,7 @@ class ApiConstants {
   // Auth
   static const register = '/auth/register';
   static const login = '/auth/login';
+  static const refresh = '/auth/refresh';
   static const me = '/auth/me';
 
   // Workouts
@@ -26,6 +27,12 @@ class ApiConstants {
   // Export
   static const exportXlsx = '/export/xlsx';
   static const exportCsv = '/export/csv';
+
+  // Compute engine (localhost:8001 when running separately)
+  static const computeBaseUrl = 'http://localhost:8001';
+  static const computeFatigue = '/compute/fatigue';
+  static const computeRisk = '/compute/risk';
+  static const computePlan = '/compute/plan';
 
   // JWT
   static const tokenHeader = 'Authorization';

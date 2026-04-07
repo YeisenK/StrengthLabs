@@ -9,6 +9,7 @@ import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart
 
 class ExportService {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
+  // ignore: unused_field
   static final _filenameFmt = DateFormat('yyyyMMdd');
 
   static const _headers = [

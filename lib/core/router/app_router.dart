@@ -3,6 +3,7 @@ import 'package:strengthlabs_beta/features/auth/presentation/pages/login_page.da
 import 'package:strengthlabs_beta/features/auth/presentation/pages/register_page.dart';
 import 'package:strengthlabs_beta/features/export/presentation/pages/export_page.dart';
 import 'package:strengthlabs_beta/features/fatigue/presentation/pages/fatigue_dashboard_page.dart';
+import 'package:strengthlabs_beta/features/plan/presentation/pages/plan_page.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/pages/routine_detail_page.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/pages/routines_page.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/pages/active_workout_page.dart';
@@ -66,6 +67,14 @@ class AppRouter {
               GoRoute(
                 path: '/fatigue',
                 builder: (_, _s) => const FatigueDashboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/plan',
+                builder: (_, _s) => const PlanPage(),
               ),
             ],
           ),
