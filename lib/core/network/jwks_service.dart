@@ -1,14 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:strengthlabs_beta/core/constants/api_constants.dart';
 
-/// Fetches and caches the server's RSA public key in JWKS format.
-///
-/// The JWKS endpoint (`GET /auth/.well-known/jwks.json`) returns the server's
-/// RSA-2048 public key so that clients can verify token signatures locally
-/// without a round-trip, or simply cache the key for auditing purposes.
-///
-/// Usage: call [fetch] once at startup via [JwksService.instance]; the result
-/// is cached for the session so subsequent calls are free.
+// Fetches and in-memory caches the server JWKS (GET /auth/.well-known/jwks.json).
 class JwksService {
   JwksService._(this._dio);
 
@@ -27,9 +20,6 @@ class JwksService {
     return _instance!;
   }
 
-  /// Returns the raw JWKS document.
-  ///
-  /// `{ "keys": [ { "kty": "RSA", "alg": "RS256", "use": "sig", "n": "...", "e": "..." } ] }`
   Future<Map<String, dynamic>> fetch({bool forceRefresh = false}) async {
     if (_cached != null && !forceRefresh) return _cached!;
 
@@ -38,7 +28,6 @@ class JwksService {
     return _cached!;
   }
 
-  /// Returns the first RSA key entry from the JWKS, or `null` if unavailable.
   Future<Map<String, dynamic>?> firstKey({bool forceRefresh = false}) async {
     try {
       final jwks = await fetch(forceRefresh: forceRefresh);
@@ -50,6 +39,5 @@ class JwksService {
     }
   }
 
-  /// Clears the cached JWKS (call after key rotation).
-  void invalidate() => _cached = null;
+  void invalidate() => _cached = null; // call after key rotation
 }

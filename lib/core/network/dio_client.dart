@@ -26,7 +26,7 @@ class _AuthInterceptor extends Interceptor {
 
   final TokenStorage _tokenStorage;
 
-  // Separate Dio instance for refresh calls — avoids triggering this interceptor again
+  // separate instance — avoids re-triggering this interceptor
   final _refreshDio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.baseUrl,
@@ -42,8 +42,7 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Proactive refresh: if the access token is about to expire, refresh it
-    // before sending the request rather than waiting for a 401.
+    // proactive refresh before 401
     if (!_isRefreshing && await _tokenStorage.isAccessTokenExpired()) {
       await _tryRefresh();
     }
@@ -74,8 +73,6 @@ class _AuthInterceptor extends Interceptor {
     handler.next(err);
   }
 
-  /// Attempts a token refresh. Returns `true` on success, `false` otherwise.
-  /// Clears tokens on failure so the user is sent back to login.
   Future<bool> _tryRefresh() async {
     if (_isRefreshing) return false;
     _isRefreshing = true;

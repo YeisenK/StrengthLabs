@@ -38,11 +38,8 @@ class TokenStorage {
     return token != null && token.isNotEmpty;
   }
 
-  /// Returns `true` if the stored access token is expired or absent.
-  ///
-  /// Decodes the JWT payload (base64url) without verifying the signature — the
-  /// server validates signatures; this is a lightweight local expiry check used
-  /// for proactive refresh before the request reaches the server.
+  // Decodes the JWT payload locally (no signature check — server does that).
+  // Returns true if the token is missing or expires within [buffer].
   Future<bool> isAccessTokenExpired({Duration buffer = const Duration(seconds: 30)}) async {
     final token = await _storage.read(key: _kAccessToken);
     if (token == null || token.isEmpty) return true;
@@ -51,17 +48,16 @@ class TokenStorage {
       final parts = token.split('.');
       if (parts.length != 3) return true;
 
-      // JWT uses base64url without padding — add it back before decoding.
-      final payload = parts[1];
-      final normalized = base64Url.normalize(payload);
-      final decoded = utf8.decode(base64Url.decode(normalized));
-      final claims = jsonDecode(decoded) as Map<String, dynamic>;
+      // base64url has no padding — normalize before decoding
+      final normalized = base64Url.normalize(parts[1]);
+      final claims = jsonDecode(utf8.decode(base64Url.decode(normalized))) as Map<String, dynamic>;
 
-      final exp = claims['exp'];
+      final exp = claims['exp'] as int?;
       if (exp == null) return true;
 
-      final expiry = DateTime.fromMillisecondsSinceEpoch((exp as int) * 1000);
-      return DateTime.now().add(buffer).isAfter(expiry);
+      return DateTime.now().add(buffer).isAfter(
+        DateTime.fromMillisecondsSinceEpoch(exp * 1000),
+      );
     } catch (_) {
       return true;
     }

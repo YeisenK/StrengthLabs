@@ -60,8 +60,6 @@ class AuthRepository {
 
   Future<void> logout() => _tokenStorage.clearTokens();
 
-  // ── helpers ──────────────────────────────────────────────────────────────────
-
   Future<void> _saveTokens(Map<String, dynamic> data) async {
     await _tokenStorage.saveTokens(
       accessToken: data['access_token'] as String,

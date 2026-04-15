@@ -28,7 +28,7 @@ class ApiConstants {
   static const exportXlsx = '/export/xlsx';
   static const exportCsv = '/export/csv';
 
-  // Compute engine (localhost:8001 when running separately)
+  // Compute engine
   static const computeBaseUrl = 'http://localhost:8001';
   static const computeFatigue = '/compute/fatigue';
   static const computeRisk = '/compute/risk';
@@ -40,7 +40,7 @@ class ApiConstants {
   static String adminDeactivateUser(String id) =>
       '/api/v1/admin/users/$id/deactivate';
 
-  // JWT / JWKS
+  // JWKS
   static const jwks = '/auth/.well-known/jwks.json';
   static const tokenHeader = 'Authorization';
   static String bearerToken(String token) => 'Bearer $token';
