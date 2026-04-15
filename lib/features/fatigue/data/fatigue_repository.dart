@@ -1,73 +1,83 @@
-import 'package:strengthlabs_beta/core/storage/workout_local_storage.dart';
+import 'package:strengthlabs_beta/core/network/dio_client.dart';
 import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 
 class FatigueRepository {
-  FatigueRepository(this._localStorage);
+  FatigueRepository(this._dioClient);
 
-  final WorkoutLocalStorage _localStorage;
-
-  // Sets per muscle group per week considered 100% volume
-  static const _maxSetsPerWeek = 20.0;
+  final DioClient _dioClient;
 
   Future<FatigueSummary> getSummary() async {
-    final workouts = await _localStorage.load();
-    final now = DateTime.now();
-    final weekAgo = now.subtract(const Duration(days: 7));
+    final response = await _dioClient.dio.get('/fatigue/summary');
+    final data = response.data as Map<String, dynamic>;
 
-    // Weekly volume per muscle group (set count → 0–100 %)
-    final volumeMap = <MuscleGroup, double>{
+    // weekly_volume: string keys → MuscleGroup enum (accumulate into the 6 app groups)
+    final rawVolume = data['weekly_volume'] as Map<String, dynamic>? ?? {};
+    final weeklyVolume = <MuscleGroup, double>{
       for (final mg in MuscleGroup.values) mg: 0.0,
     };
-
-    for (final w in workouts.where((w) => w.date.isAfter(weekAgo))) {
-      for (final we in w.exercises) {
-        final mg = we.exercise.muscleGroup;
-        volumeMap[mg] = (volumeMap[mg] ?? 0.0) + we.sets.length;
-      }
-    }
-
-    final weeklyVolume = volumeMap.map(
-      (mg, sets) =>
-          MapEntry(mg, (sets / _maxSetsPerWeek * 100).clamp(0.0, 100.0)),
-    );
-
-    // 7-day daily fatigue trend
-    final trend = List.generate(7, (i) {
-      final day = now.subtract(Duration(days: 6 - i));
-      final dayStart = DateTime(day.year, day.month, day.day);
-      final dayEnd = dayStart.add(const Duration(days: 1));
-
-      final dayWorkouts = workouts.where(
-        (w) =>
-            !w.date.isBefore(dayStart) &&
-            w.date.isBefore(dayEnd),
-      );
-
-      double index = 0;
-      for (final w in dayWorkouts) {
-        final allSets = w.exercises.expand((e) => e.sets).toList();
-        final rpeList = allSets.map((s) => s.rpe ?? 7.0).toList();
-        final avgRpe = rpeList.isEmpty
-            ? 7.0
-            : rpeList.reduce((a, b) => a + b) / rpeList.length;
-        index += (w.duration.inMinutes * avgRpe / 10).clamp(0.0, 100.0);
-      }
-
-      return FatigueDataPoint(
-        date: day,
-        index: index.clamp(0.0, 100.0),
-      );
+    rawVolume.forEach((key, value) {
+      final mg = _parseMuscleGroup(key);
+      weeklyVolume[mg] = (weeklyVolume[mg] ?? 0.0) + (value as num).toDouble();
     });
 
-    final avgLoad = trend.map((p) => p.index).reduce((a, b) => a + b) / 7;
-    final overallIndex = (100 - avgLoad).clamp(0.0, 100.0);
+    // trend: [{date, index}]
+    final rawTrend = data['trend'] as List? ?? [];
+    final trend = rawTrend.map((t) {
+      final tm = t as Map<String, dynamic>;
+      return FatigueDataPoint(
+        date: DateTime.parse(tm['date'] as String),
+        index: (tm['index'] as num).toDouble(),
+      );
+    }).toList();
 
     return FatigueSummary(
-      overallIndex: overallIndex,
-      isOvertraining: avgLoad > 70,
+      overallIndex: (data['overall_index'] as num?)?.toDouble() ?? 0.0,
+      isOvertraining: data['is_overtraining'] as bool? ?? false,
       weeklyVolume: weeklyVolume,
       trend: trend,
+      atl: (data['atl'] as num?)?.toDouble() ?? 0.0,
+      ctl: (data['ctl'] as num?)?.toDouble() ?? 0.0,
+      tsb: (data['tsb'] as num?)?.toDouble() ?? 0.0,
+      acwr: (data['acwr'] as num?)?.toDouble() ?? 0.0,
+      monotony: (data['monotony'] as num?)?.toDouble() ?? 0.0,
+      strain: (data['strain'] as num?)?.toDouble() ?? 0.0,
+      rampRate: (data['ramp_rate'] as num?)?.toDouble() ?? 0.0,
+      readinessScore: (data['readiness_score'] as num?)?.toDouble() ?? 0.0,
+      riskFlags: (data['risk_flags'] as List?)?.cast<String>() ?? [],
+      injuryRiskScore: (data['injury_risk_score'] as num?)?.toDouble() ?? 0.0,
+      overtrainingRiskScore:
+          (data['overtraining_risk_score'] as num?)?.toDouble() ?? 0.0,
+      compositeRiskScore:
+          (data['composite_risk_score'] as num?)?.toDouble() ?? 0.0,
+      riskLevel: data['risk_level'] as String? ?? 'low',
+      dominantFactor: data['dominant_factor'] as String? ?? '',
+      recommendations:
+          (data['recommendations'] as List?)?.cast<String>() ?? [],
     );
+  }
+
+  static MuscleGroup _parseMuscleGroup(String mg) {
+    switch (mg.toLowerCase()) {
+      case 'chest':
+        return MuscleGroup.chest;
+      case 'back':
+        return MuscleGroup.back;
+      case 'shoulders':
+        return MuscleGroup.shoulders;
+      case 'arms':
+      case 'biceps':
+      case 'triceps':
+      case 'forearms':
+        return MuscleGroup.arms;
+      case 'legs':
+      case 'quads':
+      case 'hamstrings':
+      case 'glutes':
+      case 'calves':
+        return MuscleGroup.legs;
+      default:
+        return MuscleGroup.core;
+    }
   }
 }

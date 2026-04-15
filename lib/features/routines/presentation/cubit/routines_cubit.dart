@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/routines/data/mock_routines.dart';
 import 'package:strengthlabs_beta/features/routines/data/routine_repository.dart';
 import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_state.dart';
@@ -25,11 +24,7 @@ class RoutinesCubit extends Cubit<RoutinesState> {
     try {
       return _cached.firstWhere((r) => r.id == id);
     } catch (_) {
-      try {
-        return kMockRoutines.firstWhere((r) => r.id == id);
-      } catch (_) {
-        return null;
-      }
+      return null;
     }
   }
 }

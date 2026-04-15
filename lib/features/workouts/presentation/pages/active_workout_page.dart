@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strengthlabs_beta/core/constants/app_colors.dart';
 import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/workouts/data/mock_workouts.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_state.dart';
@@ -149,11 +148,13 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
   }
 
   void _showExercisePicker(BuildContext context, ActiveWorkoutState state) {
+    final exercises = context.read<WorkoutsCubit>().exercises;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) => _ExercisePickerSheet(
+        exercises: exercises,
         onPick: (exercise) {
           _cubit.addExercise(exercise);
           Navigator.pop(context);
@@ -553,7 +554,11 @@ class _RpeDropdown extends StatelessWidget {
 }
 
 class _ExercisePickerSheet extends StatefulWidget {
-  const _ExercisePickerSheet({required this.onPick});
+  const _ExercisePickerSheet({
+    required this.exercises,
+    required this.onPick,
+  });
+  final List<Exercise> exercises;
   final ValueChanged<Exercise> onPick;
 
   @override
@@ -572,14 +577,13 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
   }
 
   List<Exercise> get _filtered {
-    var list = kExerciseCatalog.where((e) {
+    return widget.exercises.where((e) {
       final matchesQuery =
           _query.isEmpty || e.name.toLowerCase().contains(_query.toLowerCase());
       final matchesGroup =
           _selectedGroup == null || e.muscleGroup == _selectedGroup;
       return matchesQuery && matchesGroup;
     }).toList();
-    return list;
   }
 
   @override

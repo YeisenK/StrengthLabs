@@ -7,13 +7,28 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AuthRepository _repository;
 
+  /// Called on app start to restore an existing session.
+  Future<void> checkAuthStatus() async {
+    final hasToken = await _repository.hasStoredTokens();
+    if (!hasToken) {
+      emit(const AuthUnauthenticated());
+      return;
+    }
+    try {
+      final user = await _repository.getCurrentUser();
+      emit(AuthAuthenticated(user));
+    } catch (_) {
+      emit(const AuthUnauthenticated());
+    }
+  }
+
   Future<void> login({required String email, required String password}) async {
     emit(const AuthLoading());
     try {
       final user = await _repository.login(email: email, password: password);
       emit(AuthAuthenticated(user));
-    } catch (_) {
-      emit(const AuthError('Invalid email or password'));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 
@@ -30,8 +45,8 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
       );
       emit(AuthAuthenticated(user));
-    } catch (_) {
-      emit(const AuthError('Registration failed — please try again'));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
 

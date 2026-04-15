@@ -34,7 +34,14 @@ class ApiConstants {
   static const computeRisk = '/compute/risk';
   static const computePlan = '/compute/plan';
 
-  // JWT
+  // Admin / Trainer
+  static const adminUsers = '/api/v1/admin/users';
+  static String adminUserById(String id) => '/api/v1/admin/users/$id';
+  static String adminDeactivateUser(String id) =>
+      '/api/v1/admin/users/$id/deactivate';
+
+  // JWT / JWKS
+  static const jwks = '/auth/.well-known/jwks.json';
   static const tokenHeader = 'Authorization';
   static String bearerToken(String token) => 'Bearer $token';
 }
