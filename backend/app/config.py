@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
+    # Set via GOOGLE_CLIENT_ID env var or .env file
+    google_client_id: str = ""
 
     class Config:
         env_file = ".env"

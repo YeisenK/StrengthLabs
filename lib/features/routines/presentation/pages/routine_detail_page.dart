@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
+import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
 import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
 import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
 
@@ -86,7 +87,20 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
           child: AppButton(
             label: 'Start this routine',
             icon: Icons.play_arrow_rounded,
-            onPressed: () => context.push('/active-workout'),
+            onPressed: () {
+              final day = routine.days[_tabController.index];
+              final template = ActiveWorkoutTemplate(
+                name: '${routine.name} — ${day.name}',
+                entries: day.exercises
+                    .map((re) => TemplateEntry(
+                          exercise: re.exercise,
+                          sets: re.sets,
+                          targetReps: re.repsScheme,
+                        ))
+                    .toList(),
+              );
+              context.push('/active-workout', extra: template);
+            },
           ),
         ),
       ),

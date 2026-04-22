@@ -12,6 +12,7 @@ class Formatters {
   static String time(DateTime date) => _time.format(date);
 
   static String duration(Duration d) {
+    if (d.isNegative) return '0s';
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
     final s = d.inSeconds.remainder(60);
@@ -21,12 +22,14 @@ class Formatters {
   }
 
   static String stopwatch(Duration d) {
+    if (d.isNegative) return '00:00';
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
   }
 
   static String volume(double kg) {
+    if (kg <= 0) return 'Bodyweight';
     if (kg >= 1000) return '${(kg / 1000).toStringAsFixed(1)}t';
     return '${kg.toStringAsFixed(0)} kg';
   }

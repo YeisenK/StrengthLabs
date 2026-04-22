@@ -5,54 +5,64 @@ import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dar
 import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/workout_set.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_state.dart';
 import 'package:strengthlabs_beta/shared/utils/formatters.dart';
 import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
 
-class WorkoutDetailPage extends StatelessWidget {
+class WorkoutDetailPage extends StatefulWidget {
   const WorkoutDetailPage({super.key, required this.id});
   final String id;
 
   @override
+  State<WorkoutDetailPage> createState() => _WorkoutDetailPageState();
+}
+
+class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
+  @override
   Widget build(BuildContext context) {
-    final workout = context.read<WorkoutsCubit>().findById(id);
+    return BlocBuilder<WorkoutsCubit, WorkoutsState>(
+      builder: (context, _) {
+        final workout = context.read<WorkoutsCubit>().findById(widget.id);
 
-    if (workout == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const EmptyStateWidget(
-          icon: Icons.search_off,
-          title: 'Workout not found',
-          subtitle: 'This session may have been deleted.',
-        ),
-      );
-    }
-
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context, workout),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _StatsRow(workout: workout),
-                const SizedBox(height: 24),
-                if (workout.notes != null && workout.notes!.isNotEmpty) ...[
-                  _SectionHeader(title: 'Notes'),
-                  const SizedBox(height: 8),
-                  _NotesCard(notes: workout.notes!),
-                  const SizedBox(height: 24),
-                ],
-                _SectionHeader(title: 'Exercises'),
-                const SizedBox(height: 8),
-                ...workout.exercises.map(
-                  (we) => _ExerciseCard(workoutExercise: we),
-                ),
-              ]),
+        if (workout == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: const EmptyStateWidget(
+              icon: Icons.search_off,
+              title: 'Workout not found',
+              subtitle: 'This session may have been deleted.',
             ),
+          );
+        }
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              _buildAppBar(context, workout),
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _StatsRow(workout: workout),
+                    const SizedBox(height: 24),
+                    if (workout.notes != null && workout.notes!.isNotEmpty) ...[
+                      _SectionHeader(title: 'Notes'),
+                      const SizedBox(height: 8),
+                      _NotesCard(notes: workout.notes!),
+                      const SizedBox(height: 24),
+                    ],
+                    _SectionHeader(title: 'Exercises'),
+                    const SizedBox(height: 8),
+                    ...workout.exercises.map(
+                      (we) => _ExerciseCard(workoutExercise: we),
+                    ),
+                  ]),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -64,12 +74,89 @@ class WorkoutDetailPage extends StatelessWidget {
       ),
       actions: [
         IconButton(
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () => _editWorkout(context, workout),
+        ),
+        IconButton(
           icon: const Icon(Icons.delete_outline),
           onPressed: () => _confirmDelete(context, workout),
         ),
         const SizedBox(width: 8),
       ],
     );
+  }
+
+  Future<void> _editWorkout(BuildContext context, Workout workout) async {
+    final nameCtrl = TextEditingController(text: workout.name);
+    final notesCtrl = TextEditingController(text: workout.notes ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Edit workout'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Name'),
+              textCapitalization: TextCapitalization.sentences,
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesCtrl,
+              decoration: const InputDecoration(labelText: 'Notes (optional)'),
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 3,
+              minLines: 1,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    // Read text values before dispose — accessing .text after dispose is UB.
+    final name = nameCtrl.text.trim();
+    final notes = notesCtrl.text.trim();
+
+    // Capture context-dependent objects before the async gap.
+    final cubit = context.read<WorkoutsCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+
+    nameCtrl.dispose();
+    notesCtrl.dispose();
+
+    if (confirmed != true || !mounted) return;
+    if (name.isEmpty) return;
+
+    try {
+      await cubit.updateWorkout(
+        workout.id,
+        name: name,
+        notes: notes.isEmpty ? null : notes,
+      );
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: errorColor,
+          ),
+        );
+      }
+    }
   }
 
   void _confirmDelete(BuildContext context, Workout workout) {

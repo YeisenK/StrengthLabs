@@ -5,6 +5,7 @@ import 'package:strengthlabs_beta/core/constants/app_strings.dart';
 import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_state.dart';
+import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
 import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
 
 class RoutinesPage extends StatefulWidget {
@@ -50,6 +51,23 @@ class _RoutinesPageState extends State<RoutinesPage> {
               if (state is RoutinesLoading) {
                 return const SliverFillRemaining(
                   child: LoadingWidget(message: 'Loading routines...'),
+                );
+              }
+              if (state is RoutinesError) {
+                return SliverFillRemaining(
+                  child: EmptyStateWidget(
+                    icon: Icons.error_outline,
+                    title: 'Could not load routines',
+                    subtitle: state.message,
+                    action: AppButton(
+                      label: 'Retry',
+                      icon: Icons.refresh,
+                      expand: false,
+                      onPressed: () => context
+                          .read<RoutinesCubit>()
+                          .loadRoutines(level: _selectedLevel),
+                    ),
+                  ),
                 );
               }
               if (state is RoutinesLoaded) {

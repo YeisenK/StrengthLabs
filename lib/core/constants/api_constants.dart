@@ -1,13 +1,20 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const baseUrl = 'http://localhost:8000';
+  // Backend base URL. Override at build/run time:
+  //   flutter run --dart-define=API_BASE_URL=http://192.168.1.X:8000
+  // Default targets the Android emulator loopback to the host machine.
+  static const baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
+  );
 
   // Auth
   static const register = '/auth/register';
   static const login = '/auth/login';
   static const refresh = '/auth/refresh';
   static const me = '/auth/me';
+  static const authGoogle = '/auth/google';
 
   // Workouts
   static const workouts = '/workouts';
@@ -27,21 +34,4 @@ class ApiConstants {
   // Export
   static const exportXlsx = '/export/xlsx';
   static const exportCsv = '/export/csv';
-
-  // Compute engine
-  static const computeBaseUrl = 'http://localhost:8001';
-  static const computeFatigue = '/compute/fatigue';
-  static const computeRisk = '/compute/risk';
-  static const computePlan = '/compute/plan';
-
-  // Admin / Trainer
-  static const adminUsers = '/api/v1/admin/users';
-  static String adminUserById(String id) => '/api/v1/admin/users/$id';
-  static String adminDeactivateUser(String id) =>
-      '/api/v1/admin/users/$id/deactivate';
-
-  // JWKS
-  static const jwks = '/auth/.well-known/jwks.json';
-  static const tokenHeader = 'Authorization';
-  static String bearerToken(String token) => 'Bearer $token';
 }

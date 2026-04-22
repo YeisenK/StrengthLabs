@@ -17,8 +17,17 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repository.getCurrentUser();
       emit(AuthAuthenticated(user));
-    } catch (_) {
-      emit(const AuthUnauthenticated());
+    } catch (e) {
+      // After a failed /auth/me the Dio interceptor has already cleared
+      // tokens if the refresh also failed (401). If tokens are gone it
+      // means the session is invalid → just go to login. Otherwise we
+      // couldn't reach the server, so surface that to the user.
+      final stillHasToken = await _repository.hasStoredTokens();
+      if (stillHasToken) {
+        emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
+      } else {
+        emit(const AuthUnauthenticated());
+      }
     }
   }
 
@@ -47,6 +56,22 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> loginWithGoogle() async {
+    emit(const AuthLoading());
+    try {
+      final user = await _repository.loginWithGoogle();
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      // Cancelled sign-in is not an error worth surfacing
+      if (message == 'Google Sign-In cancelled') {
+        emit(const AuthUnauthenticated());
+      } else {
+        emit(AuthError(message));
+      }
     }
   }
 

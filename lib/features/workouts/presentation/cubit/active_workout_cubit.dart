@@ -4,6 +4,29 @@ import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart
 import 'package:strengthlabs_beta/features/workouts/domain/entities/workout_set.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_state.dart';
 
+/// A single exercise slot within a template pre-populated from a routine:
+/// an exercise, the recommended number of empty sets, and an optional
+/// rep scheme hint (e.g. "5", "8-12", "5/3/1+") shown in the UI.
+class TemplateEntry {
+  const TemplateEntry({
+    required this.exercise,
+    required this.sets,
+    this.targetReps,
+  });
+
+  final Exercise exercise;
+  final int sets;
+  final String? targetReps;
+}
+
+/// Seed data for a new active workout, usually sourced from a routine day.
+class ActiveWorkoutTemplate {
+  const ActiveWorkoutTemplate({required this.name, required this.entries});
+
+  final String name;
+  final List<TemplateEntry> entries;
+}
+
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   ActiveWorkoutCubit()
       : super(ActiveWorkoutState(
@@ -16,6 +39,21 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   String _nextId() => '${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
 
   void setName(String name) => emit(state.copyWith(name: name));
+
+  /// Replaces the current workout state with exercises pre-populated from
+  /// a routine template. Each entry gets `sets` empty [ActiveSet] rows.
+  void loadTemplate(ActiveWorkoutTemplate template) {
+    final exercises = template.entries.map((e) {
+      final setCount = e.sets.clamp(1, 20);
+      return ActiveExercise(
+        id: _nextId(),
+        exercise: e.exercise,
+        targetReps: e.targetReps,
+        sets: List.generate(setCount, (_) => ActiveSet(id: _nextId())),
+      );
+    }).toList();
+    emit(state.copyWith(name: template.name, exercises: exercises));
+  }
 
   void addExercise(Exercise exercise) {
     final newExercise = ActiveExercise(

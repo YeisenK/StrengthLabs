@@ -96,6 +96,14 @@ flutter pub get
 flutter run
 ```
 
+Por defecto la app apunta a `http://10.0.2.2:8000` (loopback del emulador de Android al host). Para correr contra un backend distinto (LAN, device físico, staging), pasá la URL al arrancar:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.1.42:8000
+```
+
+Para iOS simulator el default sirve si el backend está en `localhost`. Para un dispositivo físico usá la IP LAN del host.
+
 ---
 
 ## Variables de entorno

@@ -8,6 +8,7 @@ import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summa
 import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_cubit.dart';
 import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_state.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
 import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
 
 class FatigueDashboardPage extends StatefulWidget {
@@ -46,6 +47,22 @@ class _FatigueDashboardPageState extends State<FatigueDashboardPage> {
               if (state is FatigueLoading) {
                 return const SliverFillRemaining(
                   child: LoadingWidget(message: 'Calculating fatigue...'),
+                );
+              }
+              if (state is FatigueError) {
+                return SliverFillRemaining(
+                  child: EmptyStateWidget(
+                    icon: Icons.error_outline,
+                    title: 'Could not load fatigue',
+                    subtitle: state.message,
+                    action: AppButton(
+                      label: 'Retry',
+                      icon: Icons.refresh,
+                      expand: false,
+                      onPressed: () =>
+                          context.read<FatigueCubit>().loadSummary(),
+                    ),
+                  ),
                 );
               }
               if (state is FatigueLoaded) {

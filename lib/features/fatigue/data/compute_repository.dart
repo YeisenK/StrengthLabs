@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:intl/intl.dart';
+import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
 import 'package:strengthlabs_beta/core/storage/workout_local_storage.dart';
 import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_metrics.dart';
 
@@ -12,7 +13,8 @@ class ComputeRepository {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
 
   Future<ComputeMetrics> computeMetrics() async {
-    final workouts = await _localStorage.load();
+    final workouts =
+        DemoMode.isActive ? DemoMode.workouts : await _localStorage.load();
     final now = DateTime.now();
 
     // Build daily load map: duration_minutes × avg_rpe per day key

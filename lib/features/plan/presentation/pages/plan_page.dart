@@ -19,6 +19,7 @@ class PlanPage extends StatefulWidget {
 class _PlanPageState extends State<PlanPage> {
   int? _daysToEvent;
   ComputeMetrics? _lastMetrics;
+  bool _autoRequested = false;
 
   @override
   void initState() {
@@ -26,9 +27,11 @@ class _PlanPageState extends State<PlanPage> {
     _tryGenerate();
   }
 
-  void _tryGenerate() {
+  void _tryGenerate({bool isAutoTrigger = true}) {
+    if (isAutoTrigger && _autoRequested) return;
     final fatigueState = context.read<FatigueCubit>().state;
     if (fatigueState is FatigueLoaded && fatigueState.summary.hasComputeData) {
+      _autoRequested = true;
       _generateFromSummary(fatigueState.summary);
     }
   }
@@ -88,10 +91,14 @@ class _PlanPageState extends State<PlanPage> {
                 );
               }
 
-              // Trigger plan generation when fatigue loads with data
-              if (fatigueState is FatigueLoaded &&
+              // Trigger plan generation when fatigue loads with data.
+              // Guard with _autoRequested so we never fire twice for the
+              // same page instance (initState + this builder).
+              if (!_autoRequested &&
+                  fatigueState is FatigueLoaded &&
                   fatigueState.summary.hasComputeData &&
                   context.read<PlanCubit>().state is PlanInitial) {
+                _autoRequested = true;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _generateFromSummary(fatigueState.summary);
                 });
@@ -108,7 +115,8 @@ class _PlanPageState extends State<PlanPage> {
                     return SliverFillRemaining(
                       child: _ErrorMessage(
                         message: state.message,
-                        onRetry: _tryGenerate,
+                        onRetry: () =>
+                            _tryGenerate(isAutoTrigger: false),
                       ),
                     );
                   }

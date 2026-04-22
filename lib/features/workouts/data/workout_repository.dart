@@ -1,3 +1,4 @@
+import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
 import 'package:strengthlabs_beta/core/network/dio_client.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
@@ -9,6 +10,7 @@ class WorkoutRepository {
   final DioClient _dioClient;
 
   Future<List<Workout>> getWorkouts() async {
+    if (DemoMode.isActive) return DemoMode.workouts;
     final response = await _dioClient.dio.get('/workouts');
     final data = response.data as Map<String, dynamic>;
     final items = data['items'] as List;
@@ -16,6 +18,30 @@ class WorkoutRepository {
   }
 
   Future<Workout> createWorkout(Workout workout) async {
+    if (DemoMode.isActive) {
+      final saved = Workout(
+        id: DemoMode.newId('w'),
+        name: workout.name,
+        date: workout.date,
+        duration: workout.duration,
+        exercises: workout.exercises
+            .map((we) => WorkoutExercise(
+                  exercise: we.exercise,
+                  sets: we.sets
+                      .map((s) => WorkoutSet(
+                            id: DemoMode.newId('s'),
+                            weight: s.weight,
+                            reps: s.reps,
+                            rpe: s.rpe,
+                          ))
+                      .toList(),
+                ))
+            .toList(),
+        notes: workout.notes,
+      );
+      DemoMode.addWorkout(saved);
+      return saved;
+    }
     final data = {
       'name': workout.name,
       'date': workout.date.toUtc().toIso8601String(),
@@ -44,11 +70,59 @@ class WorkoutRepository {
     return _workoutFromApi(response.data as Map<String, dynamic>);
   }
 
+  Future<Workout> updateWorkout(
+    String id, {
+    required String name,
+    String? notes,
+  }) async {
+    if (DemoMode.isActive) {
+      final existing = DemoMode.workouts.firstWhere((w) => w.id == id);
+      final updated = Workout(
+        id: existing.id,
+        name: name,
+        date: existing.date,
+        duration: existing.duration,
+        exercises: existing.exercises,
+        notes: notes,
+      );
+      DemoMode.replaceWorkout(id, updated);
+      return updated;
+    }
+    final response = await _dioClient.dio.put(
+      '/workouts/$id',
+      data: {'name': name, 'notes': notes},
+    );
+    return _workoutFromApi(response.data as Map<String, dynamic>);
+  }
+
   Future<void> deleteWorkout(String id) async {
+    if (DemoMode.isActive) {
+      DemoMode.removeWorkout(id);
+      return;
+    }
     await _dioClient.dio.delete('/workouts/$id');
   }
 
+  Future<Exercise> createExercise(String name, MuscleGroup muscleGroup) async {
+    if (DemoMode.isActive) {
+      final e = Exercise(
+        id: DemoMode.newId('e'),
+        name: name,
+        muscleGroup: muscleGroup,
+        isCustom: true,
+      );
+      DemoMode.addExercise(e);
+      return e;
+    }
+    final response = await _dioClient.dio.post(
+      '/exercises',
+      data: {'name': name, 'muscle_group': muscleGroup.name},
+    );
+    return _exerciseFromApi(response.data as Map<String, dynamic>);
+  }
+
   Future<List<Exercise>> getExercises() async {
+    if (DemoMode.isActive) return DemoMode.exercises;
     final response = await _dioClient.dio.get('/exercises');
     final items = response.data as List;
     return items

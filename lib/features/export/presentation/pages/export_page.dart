@@ -51,7 +51,7 @@ class _ExportPageState extends State<ExportPage> {
     });
 
     try {
-      final count = isXlsx
+      final result = isXlsx
           ? await _service.exportToExcel(workouts)
           : await _service.exportToCsv(workouts);
 
@@ -64,12 +64,15 @@ class _ExportPageState extends State<ExportPage> {
         }
       });
 
+      final base =
+          'Exported ${result.rowCount} sets from ${workouts.length} workouts.';
+      final message = result.shared ? base : '$base\nSaved to ${result.path}';
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Exported $count sets from ${workouts.length} workouts.',
-          ),
+          content: Text(message),
           backgroundColor: AppColors.green,
+          duration: const Duration(seconds: 5),
         ),
       );
     } catch (e) {

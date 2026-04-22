@@ -11,6 +11,7 @@ import 'package:strengthlabs_beta/features/fatigue/presentation/pages/fatigue_da
 import 'package:strengthlabs_beta/features/plan/presentation/pages/plan_page.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/pages/routine_detail_page.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/pages/routines_page.dart';
+import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/pages/active_workout_page.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/pages/workout_detail_page.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/pages/workout_list_page.dart';
@@ -55,7 +56,12 @@ class AppRouter {
         ),
         GoRoute(
           path: '/active-workout',
-          builder: (_, _s) => const ActiveWorkoutPage(),
+          builder: (_, state) {
+            final extra = state.extra;
+            return ActiveWorkoutPage(
+              template: extra is ActiveWorkoutTemplate ? extra : null,
+            );
+          },
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, shell) => MainShell(shell: shell),

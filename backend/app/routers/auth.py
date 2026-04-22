@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.core.deps import get_current_user
 from app.core.security import (
     create_access_token,
@@ -12,7 +15,14 @@ from app.core.security import (
 )
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, UserResponse
+from app.schemas.auth import (
+    GoogleAuthRequest,
+    LoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserResponse,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -72,3 +82,42 @@ def refresh(body: RefreshRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.post("/google", response_model=TokenResponse)
+def google_auth(body: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """Exchange a Google ID token for a StrengthLabs JWT pair.
+
+    The client (Flutter) signs in with Google and forwards the raw ID token
+    here. We verify it against Google's public keys, then look up or create
+    the matching user account.
+    """
+    if not settings.google_client_id:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google Sign-In is not configured on this server",
+        )
+
+    try:
+        claims = google_id_token.verify_oauth2_token(
+            body.id_token,
+            google_requests.Request(),
+            settings.google_client_id,
+        )
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
+
+    email: str = claims["email"]
+    name: str = claims.get("name") or email.split("@")[0]
+
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        user = User(name=name, email=email, hashed_password=None)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    return TokenResponse(
+        access_token=create_access_token(user.id),
+        refresh_token=create_refresh_token(user.id),
+    )

@@ -1,3 +1,4 @@
+import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
 import 'package:strengthlabs_beta/core/network/dio_client.dart';
 import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
@@ -8,6 +9,7 @@ class FatigueRepository {
   final DioClient _dioClient;
 
   Future<FatigueSummary> getSummary() async {
+    if (DemoMode.isActive) return DemoMode.fatigueSummary();
     final response = await _dioClient.dio.get('/fatigue/summary');
     final data = response.data as Map<String, dynamic>;
 

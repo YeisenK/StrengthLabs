@@ -63,7 +63,7 @@ def _build_trend(db: Session, user_id: str, now: datetime) -> list[FatigueDataPo
     points: list[FatigueDataPoint] = []
     for days_back in range(6, -1, -1):
         day_end = now - timedelta(days=days_back)
-        day_start = day_end - timedelta(days=7)
+        day_start = day_end - timedelta(days=1)
 
         rows = (
             db.query(WorkoutSet, Exercise)

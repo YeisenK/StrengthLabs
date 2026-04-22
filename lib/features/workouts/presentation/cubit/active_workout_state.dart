@@ -39,17 +39,23 @@ class ActiveExercise extends Equatable {
     required this.id,
     required this.exercise,
     required this.sets,
+    this.targetReps,
   });
 
   final String id;
   final Exercise exercise;
   final List<ActiveSet> sets;
+  final String? targetReps;
 
-  ActiveExercise copyWith({List<ActiveSet>? sets}) =>
-      ActiveExercise(id: id, exercise: exercise, sets: sets ?? this.sets);
+  ActiveExercise copyWith({List<ActiveSet>? sets}) => ActiveExercise(
+        id: id,
+        exercise: exercise,
+        sets: sets ?? this.sets,
+        targetReps: targetReps,
+      );
 
   @override
-  List<Object?> get props => [id, exercise, sets];
+  List<Object?> get props => [id, exercise, sets, targetReps];
 }
 
 class ActiveWorkoutState extends Equatable {

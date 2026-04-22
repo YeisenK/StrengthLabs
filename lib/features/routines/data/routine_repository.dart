@@ -1,4 +1,6 @@
+import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
 import 'package:strengthlabs_beta/core/network/dio_client.dart';
+import 'package:strengthlabs_beta/features/routines/data/mock_routines.dart';
 import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 
@@ -8,6 +10,10 @@ class RoutineRepository {
   final DioClient _dioClient;
 
   Future<List<Routine>> getRoutines({RoutineLevel? level}) async {
+    if (DemoMode.isActive) {
+      if (level == null) return kMockRoutines;
+      return kMockRoutines.where((r) => r.level == level).toList();
+    }
     final queryParams = level != null
         ? <String, dynamic>{'level': level.name}
         : <String, dynamic>{};
@@ -21,6 +27,9 @@ class RoutineRepository {
   }
 
   Future<Routine> getRoutine(String id) async {
+    if (DemoMode.isActive) {
+      return kMockRoutines.firstWhere((r) => r.id == id);
+    }
     final response = await _dioClient.dio.get('/routines/$id');
     return _routineFromApi(response.data as Map<String, dynamic>);
   }

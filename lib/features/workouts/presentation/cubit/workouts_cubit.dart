@@ -30,6 +30,31 @@ class WorkoutsCubit extends Cubit<WorkoutsState> {
     }
   }
 
+  Future<void> updateWorkout(
+    String id, {
+    required String name,
+    String? notes,
+  }) async {
+    try {
+      final updated = await _repository.updateWorkout(id, name: name, notes: notes);
+      if (state is WorkoutsLoaded) {
+        final list = (state as WorkoutsLoaded).workouts
+            .map((w) => w.id == id ? updated : w)
+            .toList();
+        emit(WorkoutsLoaded(List.unmodifiable(list)));
+      }
+    } catch (_) {
+      if (state is WorkoutsLoaded) emit(state);
+      rethrow;
+    }
+  }
+
+  Future<Exercise> createExercise(String name, MuscleGroup muscleGroup) async {
+    final exercise = await _repository.createExercise(name, muscleGroup);
+    _exercises = [..._exercises, exercise];
+    return exercise;
+  }
+
   Future<void> saveWorkout(Workout workout) async {
     try {
       final saved = await _repository.createWorkout(workout);

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strengthlabs_beta/core/constants/app_strings.dart';
+import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
@@ -27,51 +29,71 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context),
-          BlocBuilder<WorkoutsCubit, WorkoutsState>(
-            builder: (context, state) {
-              if (state is WorkoutsLoading) {
-                return const SliverFillRemaining(
-                  child: LoadingWidget(message: 'Loading workouts...'),
-                );
-              }
-              if (state is WorkoutsLoaded) {
-                if (state.workouts.isEmpty) {
+      body: RefreshIndicator(
+        onRefresh: () => context.read<WorkoutsCubit>().loadWorkouts(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            _buildAppBar(context),
+            BlocBuilder<WorkoutsCubit, WorkoutsState>(
+              builder: (context, state) {
+                if (state is WorkoutsLoading) {
+                  return const SliverFillRemaining(
+                    child: LoadingWidget(message: 'Loading workouts...'),
+                  );
+                }
+                if (state is WorkoutsError) {
                   return SliverFillRemaining(
                     child: EmptyStateWidget(
-                      icon: Icons.fitness_center,
-                      title: AppStrings.noWorkoutsYet,
-                      subtitle: AppStrings.noWorkoutsSubtitle,
+                      icon: Icons.error_outline,
+                      title: 'Could not load workouts',
+                      subtitle: state.message,
                       action: AppButton(
-                        label: AppStrings.startWorkout,
-                        icon: Icons.add,
+                        label: 'Retry',
+                        icon: Icons.refresh,
                         expand: false,
-                        onPressed: () => context.push('/active-workout'),
+                        onPressed: () =>
+                            context.read<WorkoutsCubit>().loadWorkouts(),
                       ),
                     ),
                   );
                 }
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => _WorkoutCard(
-                        workout: state.workouts[i],
-                        onTap: () => context.push(
-                          '/workouts/detail/${state.workouts[i].id}',
+                if (state is WorkoutsLoaded) {
+                  if (state.workouts.isEmpty) {
+                    return SliverFillRemaining(
+                      child: EmptyStateWidget(
+                        icon: Icons.fitness_center,
+                        title: AppStrings.noWorkoutsYet,
+                        subtitle: AppStrings.noWorkoutsSubtitle,
+                        action: AppButton(
+                          label: AppStrings.startWorkout,
+                          icon: Icons.add,
+                          expand: false,
+                          onPressed: () => context.push('/active-workout'),
                         ),
                       ),
-                      childCount: state.workouts.length,
+                    );
+                  }
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, i) => _WorkoutCard(
+                          workout: state.workouts[i],
+                          onTap: () => context.push(
+                            '/workouts/detail/${state.workouts[i].id}',
+                          ),
+                        ),
+                        childCount: state.workouts.length,
+                      ),
                     ),
-                  ),
-                );
-              }
-              return const SliverToBoxAdapter(child: SizedBox.shrink());
-            },
-          ),
-        ],
+                  );
+                }
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              },
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/active-workout'),
@@ -100,7 +122,10 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
   void _showProfileSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (_) => const _ProfileSheet(),
+      builder: (sheetContext) => BlocProvider.value(
+        value: context.read<AuthCubit>(),
+        child: const _ProfileSheet(),
+      ),
     );
   }
 }
@@ -233,6 +258,9 @@ class _ProfileSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = context.watch<AuthCubit>().state;
+    final user = authState is AuthAuthenticated ? authState.user : null;
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -241,18 +269,28 @@ class _ProfileSheet extends StatelessWidget {
           CircleAvatar(
             radius: 32,
             backgroundColor: theme.colorScheme.primaryContainer,
-            child: Icon(Icons.person, size: 32, color: theme.colorScheme.primary),
+            child: Icon(Icons.person,
+                size: 32, color: theme.colorScheme.primary),
           ),
           const SizedBox(height: 12),
-          Text('Example User', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-          Text('example@example.com', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            user?.name ?? 'Guest',
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            user?.email ?? '—',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
           const SizedBox(height: 24),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text(AppStrings.logout),
-            onTap: () {
+            onTap: () async {
               Navigator.pop(context);
-              context.go('/login');
+              await context.read<AuthCubit>().logout();
+              // Router's _AuthNotifier will redirect to /login.
             },
           ),
         ],

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:strengthlabs_beta/core/constants/api_constants.dart';
 import 'package:strengthlabs_beta/core/storage/token_storage.dart';
 
@@ -35,7 +38,7 @@ class _AuthInterceptor extends Interceptor {
     ),
   );
 
-  bool _isRefreshing = false;
+  Completer<bool>? _refreshCompleter;
 
   @override
   Future<void> onRequest(
@@ -43,8 +46,11 @@ class _AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     // proactive refresh before 401
-    if (!_isRefreshing && await _tokenStorage.isAccessTokenExpired()) {
+    if (_refreshCompleter == null &&
+        await _tokenStorage.isAccessTokenExpired()) {
       await _tryRefresh();
+    } else if (_refreshCompleter != null) {
+      await _refreshCompleter!.future;
     }
 
     final token = await _tokenStorage.getAccessToken();
@@ -59,27 +65,37 @@ class _AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode == 401 && !_isRefreshing) {
+    if (err.response?.statusCode == 401) {
       final refreshed = await _tryRefresh();
       if (refreshed) {
         final newToken = await _tokenStorage.getAccessToken();
         final opts = err.requestOptions;
         opts.headers['Authorization'] = 'Bearer $newToken';
-        final retryResponse = await _refreshDio.fetch(opts);
-        handler.resolve(retryResponse);
-        return;
+        try {
+          final retryResponse = await _refreshDio.fetch(opts);
+          handler.resolve(retryResponse);
+          return;
+        } on DioException catch (retryErr) {
+          handler.next(retryErr);
+          return;
+        }
       }
     }
     handler.next(err);
   }
 
   Future<bool> _tryRefresh() async {
-    if (_isRefreshing) return false;
-    _isRefreshing = true;
+    // Coalesce concurrent refreshes.
+    final inFlight = _refreshCompleter;
+    if (inFlight != null) return inFlight.future;
+
+    final completer = Completer<bool>();
+    _refreshCompleter = completer;
     try {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken == null) {
         await _tokenStorage.clearTokens();
+        completer.complete(false);
         return false;
       }
 
@@ -92,12 +108,16 @@ class _AuthInterceptor extends Interceptor {
         accessToken: response.data['access_token'] as String,
         refreshToken: response.data['refresh_token'] as String,
       );
+      completer.complete(true);
       return true;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Token refresh failed: $e');
+      debugPrintStack(stackTrace: stack);
       await _tokenStorage.clearTokens();
+      completer.complete(false);
       return false;
     } finally {
-      _isRefreshing = false;
+      _refreshCompleter = null;
     }
   }
 }

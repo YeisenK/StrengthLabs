@@ -14,7 +14,9 @@ import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
 import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
 
 class ActiveWorkoutPage extends StatefulWidget {
-  const ActiveWorkoutPage({super.key});
+  const ActiveWorkoutPage({super.key, this.template});
+
+  final ActiveWorkoutTemplate? template;
 
   @override
   State<ActiveWorkoutPage> createState() => _ActiveWorkoutPageState();
@@ -22,21 +24,23 @@ class ActiveWorkoutPage extends StatefulWidget {
 
 class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
   late final ActiveWorkoutCubit _cubit;
+  final ValueNotifier<Duration> _elapsed = ValueNotifier(Duration.zero);
   Timer? _timer;
-  Duration _elapsed = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _cubit = ActiveWorkoutCubit();
+    if (widget.template != null) _cubit.loadTemplate(widget.template!);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _elapsed = _cubit.state.elapsed);
+      _elapsed.value = _cubit.state.elapsed;
     });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _elapsed.dispose();
     _cubit.close();
     super.dispose();
   }
@@ -53,11 +57,24 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
             child: const Text('Keep going'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
               final workout = _cubit.finish();
-              context.read<WorkoutsCubit>().saveWorkout(workout);
-              context.go('/workouts');
+              try {
+                await context.read<WorkoutsCubit>().saveWorkout(workout);
+                if (mounted) context.go('/workouts');
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString().replaceFirst('Exception: ', ''),
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text('Finish'),
           ),
@@ -109,33 +126,40 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
                 onChanged: _cubit.setName,
               ),
               actions: [
-                _TimerChip(elapsed: _elapsed),
+                ValueListenableBuilder<Duration>(
+                  valueListenable: _elapsed,
+                  builder: (_, elapsed, _) => _TimerChip(elapsed: elapsed),
+                ),
                 const SizedBox(width: 12),
               ],
             ),
-            body: state.exercises.isEmpty
-                ? EmptyStateWidget(
-                    icon: Icons.add_circle_outline,
-                    title: 'No exercises yet',
-                    subtitle: 'Add your first exercise to get started',
-                    action: AppButton(
-                      label: AppStrings.addExercise,
-                      icon: Icons.add,
-                      expand: false,
-                      onPressed: () => _showExercisePicker(context, state),
+            body: SafeArea(
+              top: false,
+              bottom: false,
+              child: state.exercises.isEmpty
+                  ? EmptyStateWidget(
+                      icon: Icons.add_circle_outline,
+                      title: 'No exercises yet',
+                      subtitle: 'Add your first exercise to get started',
+                      action: AppButton(
+                        label: AppStrings.addExercise,
+                        icon: Icons.add,
+                        expand: false,
+                        onPressed: () => _showExercisePicker(context, state),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                      itemCount: state.exercises.length,
+                      itemBuilder: (context, i) {
+                        final ae = state.exercises[i];
+                        return _ActiveExerciseCard(
+                          activeExercise: ae,
+                          cubit: _cubit,
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                    itemCount: state.exercises.length,
-                    itemBuilder: (context, i) {
-                      final ae = state.exercises[i];
-                      return _ActiveExerciseCard(
-                        activeExercise: ae,
-                        cubit: _cubit,
-                      );
-                    },
-                  ),
+            ),
             bottomNavigationBar: _BottomBar(
               onAddExercise: () => _showExercisePicker(context, state),
               onFinish: _finishWorkout,
@@ -159,6 +183,8 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
           _cubit.addExercise(exercise);
           Navigator.pop(context);
         },
+        onCreateExercise: (name, mg) =>
+            context.read<WorkoutsCubit>().createExercise(name, mg),
       ),
     );
   }
@@ -196,6 +222,8 @@ class _WorkoutNameFieldState extends State<_WorkoutNameField> {
     return TextField(
       controller: _ctrl,
       onChanged: widget.onChanged,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => FocusScope.of(context).unfocus(),
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -265,11 +293,28 @@ class _ActiveExerciseCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    activeExercise.exercise.name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activeExercise.exercise.name,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (activeExercise.targetReps != null &&
+                          activeExercise.targetReps!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            'Target: ${activeExercise.sets.length} × ${activeExercise.targetReps!}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 IconButton(
@@ -490,6 +535,8 @@ class _SetInput extends StatelessWidget {
       keyboardType: keyboardType,
       onChanged: onChanged,
       textAlign: TextAlign.center,
+      textInputAction: TextInputAction.done,
+      onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
       style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         hintText: hint,
@@ -557,9 +604,11 @@ class _ExercisePickerSheet extends StatefulWidget {
   const _ExercisePickerSheet({
     required this.exercises,
     required this.onPick,
+    required this.onCreateExercise,
   });
   final List<Exercise> exercises;
   final ValueChanged<Exercise> onPick;
+  final Future<Exercise> Function(String name, MuscleGroup mg) onCreateExercise;
 
   @override
   State<_ExercisePickerSheet> createState() => _ExercisePickerSheetState();
@@ -682,10 +731,88 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
               },
             ),
           ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.add),
+            title: const Text('Create custom exercise'),
+            onTap: () => _showCreateDialog(context),
+          ),
           const SizedBox(height: 8),
         ],
       ),
     );
+  }
+
+  Future<void> _showCreateDialog(BuildContext sheetContext) async {
+    // Capture before first async gap.
+    final messenger = ScaffoldMessenger.of(sheetContext);
+    final errorColor = Theme.of(sheetContext).colorScheme.error;
+
+    final nameCtrl = TextEditingController();
+    MuscleGroup selectedGroup = MuscleGroup.chest;
+
+    final confirmed = await showDialog<bool>(
+      context: sheetContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('New exercise'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Name'),
+                textCapitalization: TextCapitalization.words,
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<MuscleGroup>(
+                value: selectedGroup,
+                decoration: const InputDecoration(labelText: 'Muscle group'),
+                items: MuscleGroup.values
+                    .map((mg) => DropdownMenuItem(
+                          value: mg,
+                          child: Text(mg.label),
+                        ))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setDialogState(() => selectedGroup = v);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Create'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final name = nameCtrl.text.trim(); // read before dispose
+    nameCtrl.dispose();
+    if (confirmed != true || !mounted) return;
+    if (name.isEmpty) return;
+
+    try {
+      final exercise = await widget.onCreateExercise(name, selectedGroup);
+      if (mounted) widget.onPick(exercise);
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: errorColor,
+          ),
+        );
+      }
+    }
   }
 }
 

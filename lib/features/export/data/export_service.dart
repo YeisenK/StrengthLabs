@@ -7,10 +7,20 @@ import 'package:share_plus/share_plus.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
 
+class ExportResult {
+  const ExportResult({required this.rowCount, required this.path, required this.shared});
+  final int rowCount;
+  final String path;
+  final bool shared;
+}
+
 class ExportService {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
   // ignore: unused_field
   static final _filenameFmt = DateFormat('yyyyMMdd');
+
+  bool get _isDesktop =>
+      Platform.isLinux || Platform.isMacOS || Platform.isWindows;
 
   static const _headers = [
     'Date',
@@ -24,9 +34,9 @@ class ExportService {
     'Volume (kg)',
   ];
 
-  /// Exports [workouts] to a .csv file and opens the share sheet.
-  /// Returns the number of rows written (excluding header).
-  Future<int> exportToCsv(List<Workout> workouts) async {
+  /// Exports [workouts] to a .csv file. On mobile opens the share sheet;
+  /// on desktop saves to the user's Downloads folder.
+  Future<ExportResult> exportToCsv(List<Workout> workouts) async {
     final rows = _buildRows(workouts);
     final buffer = StringBuffer();
 
@@ -38,14 +48,17 @@ class ExportService {
       buffer.writeln(row.map(_escapeCsvField).join(','));
     }
 
-    final file = await _writeFile('strengthlabs_export.csv', buffer.toString().codeUnits);
-    await _share(file, 'text/csv');
-    return rows.length;
+    final file = await _writeFile(
+      'strengthlabs_export.csv',
+      buffer.toString().codeUnits,
+    );
+    final shared = await _maybeShare(file, 'text/csv');
+    return ExportResult(rowCount: rows.length, path: file.path, shared: shared);
   }
 
-  /// Exports [workouts] to a .xlsx file and opens the share sheet.
-  /// Returns the number of rows written (excluding header).
-  Future<int> exportToExcel(List<Workout> workouts) async {
+  /// Exports [workouts] to a .xlsx file. On mobile opens the share sheet;
+  /// on desktop saves to the user's Downloads folder.
+  Future<ExportResult> exportToExcel(List<Workout> workouts) async {
     final rows = _buildRows(workouts);
     final excel = Excel.createExcel();
 
@@ -94,11 +107,11 @@ class ExportService {
     if (bytes == null) throw Exception('Excel encoding failed');
 
     final file = await _writeFile('strengthlabs_export.xlsx', bytes);
-    await _share(
+    final shared = await _maybeShare(
       file,
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
-    return rows.length;
+    return ExportResult(rowCount: rows.length, path: file.path, shared: shared);
   }
 
   // ---------------------------------------------------------------------------
@@ -139,16 +152,32 @@ class ExportService {
   }
 
   Future<File> _writeFile(String filename, List<int> bytes) async {
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = await _targetDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes, flush: true);
     return file;
   }
 
-  Future<void> _share(File file, String mimeType) async {
+  /// On desktop prefer the user's Downloads folder so the file is visible
+  /// outside the app sandbox. Falls back to the app documents dir when
+  /// Downloads is unavailable (and always uses docs on mobile).
+  Future<Directory> _targetDirectory() async {
+    if (_isDesktop) {
+      final downloads = await getDownloadsDirectory();
+      if (downloads != null) return downloads;
+    }
+    return getApplicationDocumentsDirectory();
+  }
+
+  /// Shares the file on mobile. Skips on desktop (returns false) because
+  /// share_plus's desktop backends are unreliable — the page shows the
+  /// on-disk path to the user instead.
+  Future<bool> _maybeShare(File file, String mimeType) async {
+    if (_isDesktop) return false;
     await Share.shareXFiles(
       [XFile(file.path, mimeType: mimeType)],
       subject: 'StrengthLabs export',
     );
+    return true;
   }
 }
