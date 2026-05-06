@@ -44,3 +44,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Google Services — replace placeholder with real file from Firebase Console
+android/app/google-services.json
+
+# Internal planning docs — not for the public repo
+documentacion/
