@@ -20,10 +20,59 @@ class WorkoutListPage extends StatefulWidget {
 }
 
 class _WorkoutListPageState extends State<WorkoutListPage> {
+  DateTimeRange? _dateRange;
+  final Set<MuscleGroup> _selectedGroups = {};
+
   @override
   void initState() {
     super.initState();
     context.read<WorkoutsCubit>().loadWorkouts();
+  }
+
+  bool get _hasFilters => _dateRange != null || _selectedGroups.isNotEmpty;
+
+  List<Workout> _applyFilters(List<Workout> all) {
+    return all.where((w) {
+      if (_dateRange != null) {
+        if (w.date.isBefore(_dateRange!.start)) return false;
+        if (w.date.isAfter(_dateRange!.end.add(const Duration(days: 1)))) return false;
+      }
+      if (_selectedGroups.isNotEmpty) {
+        final workoutGroups =
+            w.exercises.map((e) => e.exercise.muscleGroup).toSet();
+        if (workoutGroups.intersection(_selectedGroups).isEmpty) return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  Future<void> _pickDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: _dateRange,
+    );
+    if (picked != null && mounted) {
+      setState(() => _dateRange = picked);
+    }
+  }
+
+  void _toggleGroup(MuscleGroup mg) {
+    setState(() {
+      if (_selectedGroups.contains(mg)) {
+        _selectedGroups.remove(mg);
+      } else {
+        _selectedGroups.add(mg);
+      }
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _dateRange = null;
+      _selectedGroups.clear();
+    });
   }
 
   @override
@@ -35,6 +84,16 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             _buildAppBar(context),
+            SliverToBoxAdapter(
+              child: _FilterBar(
+                dateRange: _dateRange,
+                selectedGroups: _selectedGroups,
+                hasFilters: _hasFilters,
+                onDateTap: _pickDateRange,
+                onGroupToggle: _toggleGroup,
+                onClearAll: _clearFilters,
+              ),
+            ),
             BlocBuilder<WorkoutsCubit, WorkoutsState>(
               builder: (context, state) {
                 if (state is WorkoutsLoading) {
@@ -74,17 +133,34 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
                       ),
                     );
                   }
+                  final filtered = _applyFilters(state.workouts);
+                  if (filtered.isEmpty) {
+                    return SliverFillRemaining(
+                      child: EmptyStateWidget(
+                        icon: Icons.filter_list_off,
+                        title: 'No results',
+                        subtitle:
+                            'No workouts match the applied filters',
+                        action: AppButton(
+                          label: 'Clear filters',
+                          icon: Icons.close,
+                          expand: false,
+                          onPressed: _clearFilters,
+                        ),
+                      ),
+                    );
+                  }
                   return SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, i) => _WorkoutCard(
-                          workout: state.workouts[i],
+                          workout: filtered[i],
                           onTap: () => context.push(
-                            '/workouts/detail/${state.workouts[i].id}',
+                            '/workouts/detail/${filtered[i].id}',
                           ),
                         ),
-                        childCount: state.workouts.length,
+                        childCount: filtered.length,
                       ),
                     ),
                   );
@@ -129,6 +205,129 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
     );
   }
 }
+
+// ── Filter bar ────────────────────────────────────────────────────────────────
+
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({
+    required this.dateRange,
+    required this.selectedGroups,
+    required this.hasFilters,
+    required this.onDateTap,
+    required this.onGroupToggle,
+    required this.onClearAll,
+  });
+
+  final DateTimeRange? dateRange;
+  final Set<MuscleGroup> selectedGroups;
+  final bool hasFilters;
+  final VoidCallback onDateTap;
+  final ValueChanged<MuscleGroup> onGroupToggle;
+  final VoidCallback onClearAll;
+
+  String get _dateLabel {
+    if (dateRange == null) return 'Date';
+    final f = Formatters.dateShort;
+    return '${f(dateRange!.start)} – ${f(dateRange!.end)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        children: [
+          if (hasFilters) ...[
+            _Chip(
+              label: 'Clear',
+              icon: Icons.close,
+              isSelected: false,
+              onTap: onClearAll,
+            ),
+            const SizedBox(width: 4),
+          ],
+          _Chip(
+            label: _dateLabel,
+            icon: Icons.calendar_today_outlined,
+            isSelected: dateRange != null,
+            onTap: onDateTap,
+          ),
+          ...MuscleGroup.values.map(
+            (mg) => _Chip(
+              label: mg.label,
+              isSelected: selectedGroups.contains(mg),
+              onTap: () => onGroupToggle(mg),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.icon,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.surfaceVariant,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isSelected
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: isSelected
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Workout card ──────────────────────────────────────────────────────────────
 
 class _WorkoutCard extends StatelessWidget {
   const _WorkoutCard({required this.workout, required this.onTap});
@@ -252,6 +451,8 @@ class _MuscleChip extends StatelessWidget {
   }
 }
 
+// ── Profile sheet ─────────────────────────────────────────────────────────────
+
 class _ProfileSheet extends StatelessWidget {
   const _ProfileSheet();
 
@@ -290,7 +491,6 @@ class _ProfileSheet extends StatelessWidget {
             onTap: () async {
               Navigator.pop(context);
               await context.read<AuthCubit>().logout();
-              // Router's _AuthNotifier will redirect to /login.
             },
           ),
         ],

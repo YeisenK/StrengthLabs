@@ -4,7 +4,7 @@ class AppStrings {
   static const appName = 'StrengthLabs';
 
   // Auth
-  static const login = 'Login';
+  static const login = 'Log in';
   static const register = 'Register';
   static const email = 'Email';
   static const password = 'Password';
@@ -14,7 +14,7 @@ class AppStrings {
   static const alreadyAccount = 'Already have an account? ';
   static const signUp = 'Sign up';
   static const signIn = 'Sign in';
-  static const logout = 'Logout';
+  static const logout = 'Log out';
 
   // Nav
   static const workouts = 'Workouts';
@@ -24,25 +24,25 @@ class AppStrings {
   static const plan = 'Plan';
 
   // Workouts
-  static const startWorkout = 'Start Workout';
-  static const activeWorkout = 'Active Workout';
-  static const finishWorkout = 'Finish Workout';
-  static const addExercise = 'Add Exercise';
+  static const startWorkout = 'Start workout';
+  static const activeWorkout = 'Active workout';
+  static const finishWorkout = 'Finish workout';
+  static const addExercise = 'Add exercise';
   static const noWorkoutsYet = 'No workouts yet';
-  static const noWorkoutsSubtitle = 'Hit the gym and log your first session';
+  static const noWorkoutsSubtitle = 'Head to the gym and log your first session';
 
   // Export
   static const exportExcel = 'Export to Excel';
   static const exportCsv = 'Export to CSV';
-  static const dateRange = 'Date Range';
+  static const dateRange = 'Date range';
 
   // Fatigue
-  static const overallFatigue = 'Overall Fatigue';
-  static const weeklyVolume = 'Weekly Volume by Muscle Group';
-  static const fatigueLow = 'Low fatigue — you\'re fresh';
+  static const overallFatigue = 'Overall fatigue';
+  static const weeklyVolume = 'Weekly volume by muscle group';
+  static const fatigueLow = 'Low fatigue — you are fresh';
   static const fatigueMod = 'Moderate fatigue — train smart';
-  static const fatigueHigh = 'High fatigue — consider deloading';
-  static const fatigueOver = 'Overtraining risk — rest recommended';
+  static const fatigueHigh = 'High fatigue — consider a deload';
+  static const fatigueOver = 'Overtraining risk — rest up';
 
   // Common
   static const save = 'Save';

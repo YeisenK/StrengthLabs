@@ -2,6 +2,32 @@ import 'package:equatable/equatable.dart';
 
 enum MuscleGroup { chest, back, legs, shoulders, arms, core }
 
+extension MuscleGroupParsing on MuscleGroup {
+  static MuscleGroup fromString(String mg) {
+    switch (mg.toLowerCase()) {
+      case 'chest':
+        return MuscleGroup.chest;
+      case 'back':
+        return MuscleGroup.back;
+      case 'shoulders':
+        return MuscleGroup.shoulders;
+      case 'arms':
+      case 'biceps':
+      case 'triceps':
+      case 'forearms':
+        return MuscleGroup.arms;
+      case 'legs':
+      case 'quads':
+      case 'hamstrings':
+      case 'glutes':
+      case 'calves':
+        return MuscleGroup.legs;
+      default:
+        return MuscleGroup.core;
+    }
+  }
+}
+
 extension MuscleGroupLabel on MuscleGroup {
   String get label {
     switch (this) {

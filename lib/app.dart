@@ -5,21 +5,17 @@ import 'package:strengthlabs_beta/core/constants/app_strings.dart';
 import 'package:strengthlabs_beta/core/network/dio_client.dart';
 import 'package:strengthlabs_beta/core/router/app_router.dart';
 import 'package:strengthlabs_beta/core/storage/token_storage.dart';
-import 'package:strengthlabs_beta/core/storage/workout_local_storage.dart';
 import 'package:strengthlabs_beta/features/auth/data/auth_repository.dart';
 import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:strengthlabs_beta/features/fatigue/data/fatigue_repository.dart';
 import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_cubit.dart';
-import 'package:strengthlabs_beta/features/plan/data/plan_repository.dart';
+import 'package:strengthlabs_beta/features/plan/data/plan_builder.dart';
 import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_cubit.dart';
 import 'package:strengthlabs_beta/features/routines/data/routine_repository.dart';
 import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
 import 'package:strengthlabs_beta/features/workouts/data/workout_repository.dart';
 import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
 import 'package:go_router/go_router.dart';
-
-// Local import only needed for PlanRepository's ComputeRepository
-import 'package:strengthlabs_beta/features/fatigue/data/compute_repository.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -35,8 +31,6 @@ class _AppState extends State<App> {
   late final WorkoutRepository _workoutRepo;
   late final FatigueRepository _fatigueRepo;
   late final RoutineRepository _routineRepo;
-  late final ComputeRepository _computeRepo;
-  late final PlanRepository _planRepo;
   late final GoRouter _router;
 
   @override
@@ -49,12 +43,6 @@ class _AppState extends State<App> {
     _workoutRepo = WorkoutRepository(_dioClient);
     _fatigueRepo = FatigueRepository(_dioClient);
     _routineRepo = RoutineRepository(_dioClient);
-
-    // ComputeRepository / PlanRepository stay local — plan generation uses
-    // metrics already fetched from the API (via FatigueCubit) and builds
-    // the weekly session plan locally without hitting the backend.
-    _computeRepo = ComputeRepository(WorkoutLocalStorage());
-    _planRepo = PlanRepository(_computeRepo);
 
     _router = AppRouter.createRouter(_authCubit);
 
@@ -77,7 +65,7 @@ class _AppState extends State<App> {
         BlocProvider(create: (_) => WorkoutsCubit(_workoutRepo)),
         BlocProvider(create: (_) => RoutinesCubit(_routineRepo)),
         BlocProvider(create: (_) => FatigueCubit(_fatigueRepo)),
-        BlocProvider(create: (_) => PlanCubit(_planRepo)),
+        BlocProvider(create: (_) => PlanCubit(const PlanBuilder())),
       ],
       child: MaterialApp.router(
         title: AppStrings.appName,
