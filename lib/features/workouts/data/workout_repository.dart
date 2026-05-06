@@ -166,32 +166,9 @@ class WorkoutRepository {
     return Exercise(
       id: json['id'] as String,
       name: json['name'] as String,
-      muscleGroup: _parseMuscleGroup(json['muscle_group'] as String? ?? ''),
+      muscleGroup: MuscleGroupParsing.fromString(json['muscle_group'] as String? ?? ''),
       isCustom: json['is_custom'] as bool? ?? false,
     );
   }
 
-  static MuscleGroup _parseMuscleGroup(String mg) {
-    switch (mg.toLowerCase()) {
-      case 'chest':
-        return MuscleGroup.chest;
-      case 'back':
-        return MuscleGroup.back;
-      case 'shoulders':
-        return MuscleGroup.shoulders;
-      case 'arms':
-      case 'biceps':
-      case 'triceps':
-      case 'forearms':
-        return MuscleGroup.arms;
-      case 'legs':
-      case 'quads':
-      case 'hamstrings':
-      case 'glutes':
-      case 'calves':
-        return MuscleGroup.legs;
-      default:
-        return MuscleGroup.core;
-    }
-  }
 }

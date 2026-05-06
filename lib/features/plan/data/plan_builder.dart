@@ -1,146 +1,15 @@
-import 'dart:math' as math;
-
-import 'package:intl/intl.dart';
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/storage/workout_local_storage.dart';
 import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_metrics.dart';
+import 'package:strengthlabs_beta/features/plan/domain/entities/training_plan.dart';
 
-class ComputeRepository {
-  ComputeRepository(this._localStorage);
+class PlanBuilder {
+  const PlanBuilder();
 
-  final WorkoutLocalStorage _localStorage;
-
-  static final _dateFmt = DateFormat('yyyy-MM-dd');
-
-  Future<ComputeMetrics> computeMetrics() async {
-    final workouts =
-        DemoMode.isActive ? DemoMode.workouts : await _localStorage.load();
-    final now = DateTime.now();
-
-    // Build daily load map: duration_minutes × avg_rpe per day key
-    final Map<String, double> dailyLoad = {};
-    for (final w in workouts) {
-      final key = _dateFmt.format(w.date);
-      final allSets = w.exercises.expand((e) => e.sets).toList();
-      final rpeList = allSets.map((s) => s.rpe ?? 7.0).toList();
-      final avgRpe = rpeList.isEmpty
-          ? 7.0
-          : rpeList.reduce((a, b) => a + b) / rpeList.length;
-      final load = w.duration.inMinutes.clamp(1, 1440).toDouble() * avgRpe;
-      dailyLoad[key] = (dailyLoad[key] ?? 0.0) + load;
-    }
-
-    // EWMA decay factors
-    const atlDays = 7;
-    const ctlDays = 42;
-    const atlK = 2.0 / (atlDays + 1); // ≈ 0.25
-    const ctlK = 2.0 / (ctlDays + 1); // ≈ 0.046
-
-    double atl = 0.0;
-    double ctl = 0.0;
-    double? ctlAtDay7;
-
-    for (int i = 41; i >= 0; i--) {
-      final day = now.subtract(Duration(days: i));
-      final key = _dateFmt.format(day);
-      final load = dailyLoad[key] ?? 0.0;
-      atl = load * atlK + atl * (1 - atlK);
-      ctl = load * ctlK + ctl * (1 - ctlK);
-      if (i == 7) ctlAtDay7 = ctl;
-    }
-
-    final tsb = ctl - atl;
-    final acwr = ctl > 0 ? atl / ctl : 0.0;
-    final rampRate = ctlAtDay7 != null ? ctl - ctlAtDay7 : 0.0;
-
-    // Monotony and strain (last 7 days)
-    final recentLoads = List.generate(7, (i) {
-      final key = _dateFmt.format(now.subtract(Duration(days: 6 - i)));
-      return dailyLoad[key] ?? 0.0;
-    });
-
-    final mean = recentLoads.reduce((a, b) => a + b) / 7;
-    final variance = recentLoads
-            .map((l) => math.pow(l - mean, 2))
-            .reduce((a, b) => a + b) /
-        7;
-    final stdDev = math.sqrt(variance);
-    final monotony = stdDev > 0 ? mean / stdDev : 0.0;
-    final strain = monotony * recentLoads.reduce((a, b) => a + b);
-
-    // Readiness score 0–100
-    double readiness = 50.0;
-    if (ctl > 0) {
-      readiness = (50.0 + tsb).clamp(0.0, 100.0);
-      if (acwr > 1.5 || acwr < 0.5) {
-        readiness = (readiness - 20).clamp(0.0, 100.0);
-      }
-    }
-
-    // Risk scores
-    final injuryRisk =
-        acwr > 1.5 ? 0.7 : acwr > 1.3 ? 0.4 : 0.15;
-    final overtrainingRisk =
-        tsb < -20 ? 0.7 : tsb < -10 ? 0.4 : 0.15;
-    final compositeRisk = (injuryRisk + overtrainingRisk) / 2;
-
-    final riskLevel = compositeRisk >= 0.6
-        ? 'critical'
-        : compositeRisk >= 0.4
-            ? 'high'
-            : compositeRisk >= 0.2
-                ? 'moderate'
-                : 'low';
-
-    final dominantFactor = injuryRisk >= overtrainingRisk
-        ? 'Acute workload'
-        : 'Accumulated fatigue';
-
-    final riskFlags = <String>[
-      if (acwr > 1.5)
-        'High acute:chronic workload ratio (${acwr.toStringAsFixed(2)})',
-      if (tsb < -20)
-        'Training stress balance deficit (${tsb.toStringAsFixed(1)})',
-      if (monotony > 2.0) 'High training monotony — add more variety',
-    ];
-
-    final recommendations = <String>[
-      if (acwr > 1.3) 'Reduce training volume this week to lower acute load',
-      if (tsb < -10) 'Consider a deload week to restore readiness',
-      if (monotony > 2.0) 'Vary your session types and intensities',
-      if (readiness > 80) 'High readiness — good day to push intensity',
-      if (riskFlags.isEmpty && acwr >= 0.8 && acwr <= 1.3)
-        'Training load is well balanced — maintain current plan',
-    ];
-    if (recommendations.isEmpty) {
-      recommendations.add('Keep consistent with your current training plan');
-    }
-
-    return ComputeMetrics(
-      atl: atl,
-      ctl: ctl,
-      tsb: tsb,
-      acwr: acwr,
-      monotony: monotony,
-      strain: strain,
-      rampRate: rampRate,
-      readinessScore: readiness,
-      riskFlags: riskFlags,
-      injuryRiskScore: injuryRisk,
-      overtrainingRiskScore: overtrainingRisk,
-      compositeRiskScore: compositeRisk,
-      riskLevel: riskLevel,
-      dominantFactor: dominantFactor,
-      recommendations: recommendations,
-    );
-  }
-
-  Future<Map<String, dynamic>> computePlan({
+  Future<TrainingPlan> getPlan({
     required ComputeMetrics metrics,
     int? daysToEvent,
     int weeksInPhase = 0,
   }) async {
-    return _buildPlan(metrics, daysToEvent);
+    return TrainingPlan.fromJson(_buildPlan(metrics, daysToEvent));
   }
 
   Map<String, dynamic> _buildPlan(ComputeMetrics metrics, int? daysToEvent) {
@@ -229,18 +98,14 @@ class ComputeRepository {
         return [
           _s(1, days[0], 'Active Recovery', 'z1_recovery', 30, 5.0,
               'Easy movement to promote recovery', false, false),
-          _s(2, days[1], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(2, days[1], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
           _s(3, days[2], 'Mobility & Light Strength', 'z2_aerobic', 40, 5.0,
               'Light resistance work with focus on form', false, false),
-          _s(4, days[3], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(4, days[3], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
           _s(5, days[4], 'Easy Cardio', 'z2_aerobic', 35, 5.5,
               'Steady-state aerobic work', false, false),
-          _s(6, days[5], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
-          _s(7, days[6], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(6, days[5], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
+          _s(7, days[6], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
         ];
       case 'realization':
         return [
@@ -248,18 +113,16 @@ class ComputeRepository {
               'Easy session to stay sharp', false, false),
           _s(2, days[1], 'Short Intensity', 'z4_threshold', 30, 8.0,
               'Brief high-intensity to maintain peak', false, true),
-          _s(3, days[2], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(3, days[2], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
           _s(4, days[3], 'Easy Movement', 'z1_recovery', 25, 5.0,
               'Keep moving, stay loose', false, false),
-          _s(5, days[4], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(5, days[4], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
           _s(6, days[5], 'Pre-event Prep', 'z2_aerobic', 20, 5.0,
               'Very easy session the day before', false, false),
           _s(7, days[6], 'Event Day', 'z5_neuromuscular', 0, 10.0,
               'Competition / target event', false, true),
         ];
-      case 'transmutation': //:p
+      case 'transmutation':
         return [
           _s(1, days[0], 'Heavy Strength', 'z4_threshold', 60, 8.5,
               'Compound lifts at 85–90% 1RM', false, true),
@@ -273,10 +136,9 @@ class ComputeRepository {
               'Targeted accessory exercises', false, false),
           _s(6, days[5], 'Long Aerobic', 'z2_aerobic', 60, 6.0,
               'Steady-state aerobic development', false, false),
-          _s(7, days[6], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(7, days[6], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
         ];
-      default: // accumulation / base building
+      default: // accumulation
         return [
           _s(1, days[0], 'Strength Training A', 'z3_tempo', 60, 7.0,
               'Full-body compound movements, 3×8–12', false, true),
@@ -290,8 +152,7 @@ class ComputeRepository {
               'Upper-body focus and core', false, false),
           _s(6, days[5], 'Long Steady State', 'z2_aerobic', 60, 5.5,
               'Longer aerobic session for base building', false, false),
-          _s(7, days[6], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day',
-              true, false),
+          _s(7, days[6], 'Rest', 'z1_recovery', 0, 0.0, 'Full rest day', true, false),
         ];
     }
   }

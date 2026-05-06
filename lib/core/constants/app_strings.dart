@@ -4,55 +4,55 @@ class AppStrings {
   static const appName = 'StrengthLabs';
 
   // Auth
-  static const login = 'Login';
-  static const register = 'Register';
-  static const email = 'Email';
-  static const password = 'Password';
-  static const confirmPassword = 'Confirm password';
-  static const name = 'Name';
-  static const noAccount = "Don't have an account? ";
-  static const alreadyAccount = 'Already have an account? ';
-  static const signUp = 'Sign up';
-  static const signIn = 'Sign in';
-  static const logout = 'Logout';
+  static const login = 'Iniciar sesión';
+  static const register = 'Registrarse';
+  static const email = 'Correo electrónico';
+  static const password = 'Contraseña';
+  static const confirmPassword = 'Confirmar contraseña';
+  static const name = 'Nombre';
+  static const noAccount = '¿No tenés cuenta? ';
+  static const alreadyAccount = '¿Ya tenés cuenta? ';
+  static const signUp = 'Crear cuenta';
+  static const signIn = 'Ingresar';
+  static const logout = 'Cerrar sesión';
 
   // Nav
-  static const workouts = 'Workouts';
-  static const routines = 'Routines';
-  static const fatigue = 'Fatigue';
-  static const export_ = 'Export';
+  static const workouts = 'Entrenamientos';
+  static const routines = 'Rutinas';
+  static const fatigue = 'Fatiga';
+  static const export_ = 'Exportar';
   static const plan = 'Plan';
 
   // Workouts
-  static const startWorkout = 'Start Workout';
-  static const activeWorkout = 'Active Workout';
-  static const finishWorkout = 'Finish Workout';
-  static const addExercise = 'Add Exercise';
-  static const noWorkoutsYet = 'No workouts yet';
-  static const noWorkoutsSubtitle = 'Hit the gym and log your first session';
+  static const startWorkout = 'Iniciar entrenamiento';
+  static const activeWorkout = 'Entrenamiento activo';
+  static const finishWorkout = 'Finalizar entrenamiento';
+  static const addExercise = 'Agregar ejercicio';
+  static const noWorkoutsYet = 'Sin entrenamientos aún';
+  static const noWorkoutsSubtitle = 'Andá al gym y registrá tu primera sesión';
 
   // Export
-  static const exportExcel = 'Export to Excel';
-  static const exportCsv = 'Export to CSV';
-  static const dateRange = 'Date Range';
+  static const exportExcel = 'Exportar a Excel';
+  static const exportCsv = 'Exportar a CSV';
+  static const dateRange = 'Rango de fechas';
 
   // Fatigue
-  static const overallFatigue = 'Overall Fatigue';
-  static const weeklyVolume = 'Weekly Volume by Muscle Group';
-  static const fatigueLow = 'Low fatigue — you\'re fresh';
-  static const fatigueMod = 'Moderate fatigue — train smart';
-  static const fatigueHigh = 'High fatigue — consider deloading';
-  static const fatigueOver = 'Overtraining risk — rest recommended';
+  static const overallFatigue = 'Fatiga general';
+  static const weeklyVolume = 'Volumen semanal por grupo muscular';
+  static const fatigueLow = 'Fatiga baja — estás fresco';
+  static const fatigueMod = 'Fatiga moderada — entrená con criterio';
+  static const fatigueHigh = 'Fatiga alta — considerá un deload';
+  static const fatigueOver = 'Riesgo de sobreentrenamiento — descansá';
 
   // Common
-  static const save = 'Save';
-  static const cancel = 'Cancel';
-  static const delete = 'Delete';
-  static const sets = 'Sets';
-  static const reps = 'Reps';
-  static const weight = 'Weight (kg)';
+  static const save = 'Guardar';
+  static const cancel = 'Cancelar';
+  static const delete = 'Eliminar';
+  static const sets = 'Series';
+  static const reps = 'Repeticiones';
+  static const weight = 'Peso (kg)';
   static const rpe = 'RPE';
-  static const notes = 'Notes';
-  static const duration = 'Duration';
-  static const exercises = 'Exercises';
+  static const notes = 'Notas';
+  static const duration = 'Duración';
+  static const exercises = 'Ejercicios';
 }

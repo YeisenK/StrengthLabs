@@ -19,7 +19,7 @@ class FatigueRepository {
       for (final mg in MuscleGroup.values) mg: 0.0,
     };
     rawVolume.forEach((key, value) {
-      final mg = _parseMuscleGroup(key);
+      final mg = MuscleGroupParsing.fromString(key);
       weeklyVolume[mg] = (weeklyVolume[mg] ?? 0.0) + (value as num).toDouble();
     });
 
@@ -59,27 +59,4 @@ class FatigueRepository {
     );
   }
 
-  static MuscleGroup _parseMuscleGroup(String mg) {
-    switch (mg.toLowerCase()) {
-      case 'chest':
-        return MuscleGroup.chest;
-      case 'back':
-        return MuscleGroup.back;
-      case 'shoulders':
-        return MuscleGroup.shoulders;
-      case 'arms':
-      case 'biceps':
-      case 'triceps':
-      case 'forearms':
-        return MuscleGroup.arms;
-      case 'legs':
-      case 'quads':
-      case 'hamstrings':
-      case 'glutes':
-      case 'calves':
-        return MuscleGroup.legs;
-      default:
-        return MuscleGroup.core;
-    }
-  }
 }

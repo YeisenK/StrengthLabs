@@ -46,7 +46,7 @@ class RoutineRepository {
           exercise: Exercise(
             id: exMap['id'] as String,
             name: exMap['name'] as String,
-            muscleGroup: _parseMuscleGroup(exMap['muscle_group'] as String? ?? ''),
+            muscleGroup: MuscleGroupParsing.fromString(exMap['muscle_group'] as String? ?? ''),
             isCustom: exMap['is_custom'] as bool? ?? false,
           ),
           sets: (em['sets'] as num?)?.toInt() ?? 3,
@@ -90,27 +90,4 @@ class RoutineRepository {
     }
   }
 
-  static MuscleGroup _parseMuscleGroup(String mg) {
-    switch (mg.toLowerCase()) {
-      case 'chest':
-        return MuscleGroup.chest;
-      case 'back':
-        return MuscleGroup.back;
-      case 'shoulders':
-        return MuscleGroup.shoulders;
-      case 'arms':
-      case 'biceps':
-      case 'triceps':
-      case 'forearms':
-        return MuscleGroup.arms;
-      case 'legs':
-      case 'quads':
-      case 'hamstrings':
-      case 'glutes':
-      case 'calves':
-        return MuscleGroup.legs;
-      default:
-        return MuscleGroup.core;
-    }
-  }
 }
