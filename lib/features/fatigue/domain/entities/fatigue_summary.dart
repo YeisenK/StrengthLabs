@@ -59,7 +59,9 @@ class FatigueSummary extends Equatable {
   final String dominantFactor;
   final List<String> recommendations;
 
-  bool get hasComputeData => atl > 0 || ctl > 0;
+  // readiness_score > 0 indica que el compute engine respondió.
+  // El fallback Java retorna 0.0 cuando el engine no está disponible.
+  bool get hasComputeData => readinessScore > 0;
 
   @override
   List<Object?> get props => [
