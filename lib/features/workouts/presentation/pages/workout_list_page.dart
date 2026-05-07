@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_state.dart';
-import 'package:strengthlabs_beta/shared/utils/formatters.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/shared/utils/formatters.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class WorkoutListPage extends StatefulWidget {
   const WorkoutListPage({super.key});
@@ -293,7 +293,7 @@ class _Chip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer
-                : theme.colorScheme.surfaceVariant,
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -437,7 +437,7 @@ class _MuscleChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -489,8 +489,32 @@ class _ProfileSheet extends StatelessWidget {
             leading: const Icon(Icons.logout),
             title: const Text(AppStrings.logout),
             onTap: () async {
-              Navigator.pop(context);
-              await context.read<AuthCubit>().logout();
+              final authCubit = context.read<AuthCubit>();
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Log out?'),
+                  content: const Text(
+                      'You will need to sign in again to access your data.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.error,
+                      ),
+                      child: const Text(AppStrings.logout),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                if (context.mounted) Navigator.pop(context);
+                await authCubit.logout();
+              }
             },
           ),
         ],

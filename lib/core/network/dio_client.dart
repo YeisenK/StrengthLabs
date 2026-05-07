@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:strengthlabs_beta/core/constants/api_constants.dart';
-import 'package:strengthlabs_beta/core/storage/token_storage.dart';
+import 'package:strengthlabs/core/constants/api_constants.dart';
+import 'package:strengthlabs/core/storage/token_storage.dart';
 
 class DioClient {
   DioClient(this._tokenStorage) {

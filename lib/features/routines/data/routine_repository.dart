@@ -1,8 +1,8 @@
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/features/routines/data/mock_routines.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/features/routines/data/mock_routines.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 
 class RoutineRepository {
   const RoutineRepository(this._dioClient);

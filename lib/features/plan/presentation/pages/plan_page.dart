@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_metrics.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_cubit.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_state.dart';
-import 'package:strengthlabs_beta/features/plan/domain/entities/training_plan.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_cubit.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_state.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_metrics.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_state.dart';
+import 'package:strengthlabs/features/plan/domain/entities/training_plan.dart';
+import 'package:strengthlabs/features/plan/presentation/cubit/plan_cubit.dart';
+import 'package:strengthlabs/features/plan/presentation/cubit/plan_state.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class PlanPage extends StatefulWidget {
   const PlanPage({super.key});
@@ -350,7 +350,7 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -479,7 +479,7 @@ class _SessionTile extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFF9800).withOpacity(0.2),
+                                color: const Color(0xFFFF9800).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(

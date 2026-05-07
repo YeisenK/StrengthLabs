@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
 
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.shell});

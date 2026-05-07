@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
-import 'package:strengthlabs_beta/shared/utils/validators.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_text_field.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
+import 'package:strengthlabs/shared/utils/validators.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/app_text_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

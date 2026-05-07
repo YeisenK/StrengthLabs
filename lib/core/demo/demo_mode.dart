@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:strengthlabs_beta/features/auth/domain/entities/user.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
-import 'package:strengthlabs_beta/features/workouts/data/mock_workouts.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/auth/domain/entities/user.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
+import 'package:strengthlabs/features/workouts/data/mock_workouts.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 
 /// In-session demo mode. Activated when the user logs in with the
 /// hardcoded `example@example.com` / `example` credentials. While active,
@@ -31,13 +31,15 @@ class DemoMode {
   static List<Exercise> get exercises => List<Exercise>.of(_exercises);
 
   static bool credentialsMatch(String email, String password) {
+    if (!kDebugMode) return false;
     return email.trim().toLowerCase() == DemoMode.email &&
         password == DemoMode.password;
   }
 
   static void enable() {
+    if (!kDebugMode) return;
     _active = true;
-    if (kDebugMode) debugPrint('[demo] demo mode enabled');
+    debugPrint('[demo] demo mode enabled');
   }
 
   static void disable() {

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
 
 abstract class RoutinesState extends Equatable {
   const RoutinesState();

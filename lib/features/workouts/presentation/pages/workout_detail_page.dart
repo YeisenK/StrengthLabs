@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout_set.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_state.dart';
-import 'package:strengthlabs_beta/shared/utils/formatters.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/shared/utils/formatters.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class WorkoutDetailPage extends StatefulWidget {
   const WorkoutDetailPage({super.key, required this.id});
@@ -90,6 +90,10 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
     final nameCtrl = TextEditingController(text: workout.name);
     final notesCtrl = TextEditingController(text: workout.notes ?? '');
 
+    final cubit = context.read<WorkoutsCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -126,19 +130,13 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
       ),
     );
 
-    // Read text values before dispose — accessing .text after dispose is UB.
     final name = nameCtrl.text.trim();
     final notes = notesCtrl.text.trim();
-
-    // Capture context-dependent objects before the async gap.
-    final cubit = context.read<WorkoutsCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-    final errorColor = Theme.of(context).colorScheme.error;
 
     nameCtrl.dispose();
     notesCtrl.dispose();
 
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true) return;
     if (name.isEmpty) return;
 
     try {
@@ -324,7 +322,7 @@ class _ExerciseCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

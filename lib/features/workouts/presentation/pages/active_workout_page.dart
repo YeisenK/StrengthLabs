@@ -3,15 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_colors.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_state.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
-import 'package:strengthlabs_beta/shared/utils/formatters.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/core/constants/app_colors.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_state.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/shared/utils/formatters.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class ActiveWorkoutPage extends StatefulWidget {
   const ActiveWorkoutPage({super.key, this.template});
@@ -60,17 +61,24 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
             onPressed: () async {
               Navigator.pop(context);
               final workout = _cubit.finish();
+              final workoutsCubit = context.read<WorkoutsCubit>();
+              final fatigueCubit = context.read<FatigueCubit>();
+              final messenger = ScaffoldMessenger.of(context);
+              final errorColor = Theme.of(context).colorScheme.error;
+
               try {
-                await context.read<WorkoutsCubit>().saveWorkout(workout);
+                await workoutsCubit.saveWorkout(workout);
+                // Trigger fatigue recalculation in background
+                unawaited(fatigueCubit.loadSummary());
                 if (mounted) context.go('/workouts');
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text(
                         e.toString().replaceFirst('Exception: ', ''),
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      backgroundColor: errorColor,
                     ),
                   );
                 }
@@ -437,7 +445,7 @@ class _ActiveSetRowState extends State<_ActiveSetRow> {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: isCompleted
-            ? AppColors.green.withOpacity(0.08)
+            ? AppColors.green.withValues(alpha: 0.08)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
@@ -497,7 +505,7 @@ class _ActiveSetRowState extends State<_ActiveSetRow> {
               decoration: BoxDecoration(
                 color: isCompleted
                     ? AppColors.green
-                    : theme.colorScheme.surfaceVariant,
+                    : theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -566,7 +574,7 @@ class _RpeDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonHideUnderline(
@@ -767,7 +775,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<MuscleGroup>(
-                value: selectedGroup,
+                initialValue: selectedGroup,
                 decoration: const InputDecoration(labelText: 'Muscle group'),
                 items: MuscleGroup.values
                     .map((mg) => DropdownMenuItem(
@@ -839,7 +847,7 @@ class _FilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer
-                : theme.colorScheme.surfaceVariant,
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(

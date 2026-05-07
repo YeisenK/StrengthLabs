@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:strengthlabs_beta/app.dart';
+import 'package:strengthlabs/app.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

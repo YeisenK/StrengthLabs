@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/core/constants/app_colors.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/export/data/export_service.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_state.dart';
-import 'package:strengthlabs_beta/shared/utils/formatters.dart';
+import 'package:strengthlabs/core/constants/app_colors.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/features/export/data/export_service.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/shared/utils/formatters.dart';
 
 enum _ExportStatus { idle, loading, success }
 

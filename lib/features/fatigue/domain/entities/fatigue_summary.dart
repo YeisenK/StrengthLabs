@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 
 class FatigueDataPoint extends Equatable {
   const FatigueDataPoint({required this.date, required this.index});

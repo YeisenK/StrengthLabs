@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:strengthlabs_beta/core/constants/api_constants.dart';
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/core/storage/token_storage.dart';
-import 'package:strengthlabs_beta/features/auth/domain/entities/user.dart';
+import 'package:strengthlabs/core/constants/api_constants.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/core/storage/token_storage.dart';
+import 'package:strengthlabs/features/auth/domain/entities/user.dart';
 
 class AuthRepository {
   AuthRepository(this._dioClient, this._tokenStorage);

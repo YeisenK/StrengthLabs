@@ -1,5 +1,5 @@
-name: strengthlabs_beta
-description: "Strength Labs — fitness training tracking app"
+name: strengthlabs
+description: "StrengthLabs — fitness training tracking app"
 publish_to: 'none'
 version: 1.0.0+1
 

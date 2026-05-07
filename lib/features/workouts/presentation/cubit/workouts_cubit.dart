@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/workouts/data/workout_repository.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/features/workouts/data/workout_repository.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
 
 class WorkoutsCubit extends Cubit<WorkoutsState> {
   WorkoutsCubit(this._repository) : super(const WorkoutsInitial());

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_state.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_state.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class RoutinesPage extends StatefulWidget {
   const RoutinesPage({super.key});
@@ -158,7 +158,7 @@ class _Chip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer
-                : theme.colorScheme.surfaceVariant,
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -214,7 +214,7 @@ class _RoutineCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: levelColor.withOpacity(0.15),
+                        color: levelColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -230,7 +230,7 @@ class _RoutineCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

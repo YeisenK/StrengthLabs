@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/auth/data/auth_repository.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
+import 'package:strengthlabs/features/auth/data/auth_repository.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._repository) : super(const AuthInitial());

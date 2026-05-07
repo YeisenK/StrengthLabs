@@ -4,8 +4,8 @@ import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 
 class ExportResult {
   const ExportResult({required this.rowCount, required this.path, required this.shared});
@@ -16,8 +16,6 @@ class ExportResult {
 
 class ExportService {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
-  // ignore: unused_field
-  static final _filenameFmt = DateFormat('yyyyMMdd');
 
   bool get _isDesktop =>
       Platform.isLinux || Platform.isMacOS || Platform.isWindows;
@@ -174,9 +172,11 @@ class ExportService {
   /// on-disk path to the user instead.
   Future<bool> _maybeShare(File file, String mimeType) async {
     if (_isDesktop) return false;
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: mimeType)],
-      subject: 'StrengthLabs export',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: mimeType)],
+        subject: 'StrengthLabs export',
+      ),
     );
     return true;
   }

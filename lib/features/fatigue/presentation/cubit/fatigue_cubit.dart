@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/fatigue/data/fatigue_repository.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_state.dart';
+import 'package:strengthlabs/features/fatigue/data/fatigue_repository.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_state.dart';
 
 class FatigueCubit extends Cubit<FatigueState> {
   FatigueCubit(this._repository) : super(const FatigueInitial());

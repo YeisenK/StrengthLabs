@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/auth/domain/entities/user.dart';
+import 'package:strengthlabs/features/auth/domain/entities/user.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();

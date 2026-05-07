@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/core/constants/app_colors.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/core/router/app_router.dart';
-import 'package:strengthlabs_beta/core/storage/token_storage.dart';
-import 'package:strengthlabs_beta/features/auth/data/auth_repository.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:strengthlabs_beta/features/fatigue/data/fatigue_repository.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_cubit.dart';
-import 'package:strengthlabs_beta/features/plan/data/plan_builder.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_cubit.dart';
-import 'package:strengthlabs_beta/features/routines/data/routine_repository.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/data/workout_repository.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/core/constants/app_colors.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/core/router/app_router.dart';
+import 'package:strengthlabs/core/storage/token_storage.dart';
+import 'package:strengthlabs/features/auth/data/auth_repository.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:strengthlabs/features/fatigue/data/fatigue_repository.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
+import 'package:strengthlabs/features/plan/data/plan_builder.dart';
+import 'package:strengthlabs/features/plan/presentation/cubit/plan_cubit.dart';
+import 'package:strengthlabs/features/routines/data/routine_repository.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
+import 'package:strengthlabs/features/workouts/data/workout_repository.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
 import 'package:go_router/go_router.dart';
 
 class App extends StatefulWidget {

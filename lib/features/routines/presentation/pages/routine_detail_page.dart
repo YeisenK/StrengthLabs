@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class RoutineDetailPage extends StatefulWidget {
   const RoutineDetailPage({super.key, required this.id});
@@ -134,7 +134,7 @@ class _RoutineHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            theme.colorScheme.primaryContainer.withOpacity(0.8),
+            theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
             theme.colorScheme.surface,
           ],
         ),
@@ -180,7 +180,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

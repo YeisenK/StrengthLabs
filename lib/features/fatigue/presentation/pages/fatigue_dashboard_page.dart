@@ -2,14 +2,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/core/constants/app_colors.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_cubit.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_state.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/core/constants/app_colors.dart';
+import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_state.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class FatigueDashboardPage extends StatefulWidget {
   const FatigueDashboardPage({super.key});
@@ -153,7 +155,7 @@ class _ReadinessCard extends StatelessWidget {
                 painter: _GaugePainter(
                   index: score,
                   color: color,
-                  trackColor: theme.colorScheme.surfaceVariant,
+                  trackColor: theme.colorScheme.surfaceContainerHighest,
                 ),
                 child: Center(
                   child: Column(
@@ -181,7 +183,7 @@ class _ReadinessCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -202,13 +204,21 @@ class _ReadinessCard extends StatelessWidget {
             ),
             if (!summary.hasComputeData) ...[
               const SizedBox(height: 12),
-              Text(
-                'Connect compute server for detailed metrics',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              Builder(builder: (context) {
+                final wState = context.watch<WorkoutsCubit>().state;
+                final hasWorkouts =
+                    wState is WorkoutsLoaded && wState.workouts.isNotEmpty;
+                final msg = hasWorkouts
+                    ? 'Compute engine unavailable — try again later'
+                    : 'Log your first workout to see metrics';
+                return Text(
+                  msg,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                );
+              }),
             ],
           ],
         ),
@@ -418,9 +428,9 @@ class _RiskCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color.withOpacity(0.4)),
+                    border: Border.all(color: color.withValues(alpha: 0.4)),
                   ),
                   child: Text(
                     summary.riskLevel.toUpperCase(),
@@ -530,7 +540,7 @@ class _RiskBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: value.clamp(0.0, 1.0),
             minHeight: isBold ? 8 : 6,
-            backgroundColor: theme.colorScheme.surfaceVariant,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation(color),
           ),
         ),
@@ -652,7 +662,7 @@ class _WeeklyTrendCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isLast
                                   ? color
-                                  : color.withOpacity(0.5),
+                                  : color.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -766,7 +776,7 @@ class _MuscleBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: (percentage / 100).clamp(0.0, 1.0),
               minHeight: 8,
-              backgroundColor: theme.colorScheme.surfaceVariant,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),

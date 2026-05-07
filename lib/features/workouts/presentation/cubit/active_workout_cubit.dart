@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout_set.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_state.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_state.dart';
 
 /// A single exercise slot within a template pre-populated from a routine:
 /// an exercise, the recommended number of empty sets, and an optional
