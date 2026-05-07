@@ -50,3 +50,8 @@ android/app/google-services.json
 
 # Internal planning docs — not for the public repo
 documentacion/
+
+# Android signing — never commit these
+android/key.properties
+android/*.jks
+android/*.keystore
