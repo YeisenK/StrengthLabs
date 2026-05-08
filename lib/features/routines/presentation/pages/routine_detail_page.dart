@@ -5,6 +5,7 @@ import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/shared/widgets/app_button.dart';
 import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
@@ -42,12 +43,13 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
     final routine = _routine;
 
     if (routine == null) {
+      final l10n = AppLocalizations.of(context)!;
       return Scaffold(
         appBar: AppBar(),
-        body: const EmptyStateWidget(
+        body: EmptyStateWidget(
           icon: Icons.search_off,
-          title: 'Routine not found',
-          subtitle: 'This routine may have been removed.',
+          title: l10n.routineNotFound,
+          subtitle: l10n.routineNotFoundSubtitle,
         ),
       );
     }
@@ -58,11 +60,11 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
+            title: Text(
+              routine.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                routine.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
               background: _RoutineHeader(routine: routine),
             ),
             bottom: TabBar(
@@ -85,7 +87,7 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: AppButton(
-            label: 'Start this routine',
+            label: AppLocalizations.of(context)!.startThisRoutine,
             icon: Icons.play_arrow_rounded,
             onPressed: () {
               final day = routine.days[_tabController.index];

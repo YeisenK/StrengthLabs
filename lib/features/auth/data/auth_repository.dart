@@ -96,10 +96,12 @@ class AuthRepository {
 
   Future<void> logout() async {
     DemoMode.disable();
-    await Future.wait([
-      _tokenStorage.clearTokens(),
-      _googleSignIn.signOut(),
-    ]);
+    await _tokenStorage.clearTokens();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // google_sign_in has no implementation on Linux/Windows
+    }
   }
 
   Future<void> _saveTokens(Map<String, dynamic> data) async {

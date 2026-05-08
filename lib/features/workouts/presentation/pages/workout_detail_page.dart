@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
@@ -6,6 +7,7 @@ import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/shared/utils/formatters.dart';
 import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
@@ -25,12 +27,13 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
         final workout = context.read<WorkoutsCubit>().findById(widget.id);
 
         if (workout == null) {
+          final l10n = AppLocalizations.of(context)!;
           return Scaffold(
             appBar: AppBar(),
-            body: const EmptyStateWidget(
+            body: EmptyStateWidget(
               icon: Icons.search_off,
-              title: 'Workout not found',
-              subtitle: 'This session may have been deleted.',
+              title: l10n.workoutNotFound,
+              subtitle: l10n.workoutNotFoundSubtitle,
             ),
           );
         }
@@ -46,12 +49,12 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
                     _StatsRow(workout: workout),
                     const SizedBox(height: 24),
                     if (workout.notes != null && workout.notes!.isNotEmpty) ...[
-                      _SectionHeader(title: 'Notes'),
+                      _SectionHeader(title: AppLocalizations.of(context)!.notes),
                       const SizedBox(height: 8),
                       _NotesCard(notes: workout.notes!),
                       const SizedBox(height: 24),
                     ],
-                    _SectionHeader(title: 'Exercises'),
+                    _SectionHeader(title: AppLocalizations.of(context)!.exercises),
                     const SizedBox(height: 8),
                     ...workout.exercises.map(
                       (we) => _ExerciseCard(workoutExercise: we),
@@ -68,9 +71,15 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
 
   SliverAppBar _buildAppBar(BuildContext context, Workout workout) {
     return SliverAppBar.medium(
-      title: Text(
-        workout.name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+      title: Hero(
+        tag: 'workout-title-${workout.id}',
+        child: Material(
+          type: MaterialType.transparency,
+          child: Text(
+            workout.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
       actions: [
         IconButton(
@@ -87,6 +96,7 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
   }
 
   Future<void> _editWorkout(BuildContext context, Workout workout) async {
+    final l10n = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController(text: workout.name);
     final notesCtrl = TextEditingController(text: workout.notes ?? '');
 
@@ -97,20 +107,20 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Edit workout'),
+        title: Text(l10n.editWorkout),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: l10n.name),
               textCapitalization: TextCapitalization.sentences,
               autofocus: true,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: notesCtrl,
-              decoration: const InputDecoration(labelText: 'Notes (optional)'),
+              decoration: InputDecoration(labelText: l10n.notesOptional),
               textCapitalization: TextCapitalization.sentences,
               maxLines: 3,
               minLines: 1,
@@ -120,11 +130,11 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -158,26 +168,41 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
   }
 
   void _confirmDelete(BuildContext context, Workout workout) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete workout?'),
-        content: const Text('This action cannot be undone.'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteWorkoutTitle),
+        content: Text(l10n.deleteWorkoutHint),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<WorkoutsCubit>().deleteWorkout(workout.id);
+            onPressed: () async {
+              HapticFeedback.mediumImpact();
+              final cubit = context.read<WorkoutsCubit>();
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(dialogContext);
               context.pop();
+
+              final reason = await messenger.showSnackBar(
+                SnackBar(
+                  content: Text(l10n.workoutDeleted),
+                  action: SnackBarAction(label: l10n.undo, onPressed: () {}),
+                  duration: const Duration(seconds: 4),
+                ),
+              ).closed;
+
+              if (reason != SnackBarClosedReason.action) {
+                await cubit.deleteWorkout(workout.id);
+              }
             },
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -191,12 +216,13 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: _StatCard(
             icon: Icons.calendar_today_outlined,
-            label: 'Date',
+            label: l10n.date,
             value: Formatters.dateWithYear(workout.date),
           ),
         ),
@@ -204,7 +230,7 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.timer_outlined,
-            label: 'Duration',
+            label: l10n.duration,
             value: Formatters.duration(workout.duration),
           ),
         ),
@@ -212,7 +238,7 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.monitor_weight_outlined,
-            label: 'Volume',
+            label: l10n.volume,
             value: Formatters.volume(workout.totalVolume),
           ),
         ),

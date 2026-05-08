@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
 import 'package:strengthlabs/shared/utils/validators.dart';
@@ -81,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 36),
                       AppTextField(
-                        label: AppStrings.email,
+                        label: AppLocalizations.of(context)!.email,
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 16),
                       AppTextField(
-                        label: AppStrings.password,
+                        label: AppLocalizations.of(context)!.password,
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 28),
                       BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) => AppButton(
-                          label: AppStrings.login,
+                          label: AppLocalizations.of(context)!.login,
                           isLoading: state is AuthLoading,
                           onPressed: () => _submit(context),
                         ),
@@ -124,13 +124,13 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              AppStrings.noAccount,
+                              AppLocalizations.of(context)!.noAccount,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             GestureDetector(
                               onTap: () => context.push('/register'),
                               child: Text(
-                                AppStrings.signUp,
+                                AppLocalizations.of(context)!.signUp,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w600,
@@ -168,7 +168,7 @@ class _Logo extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Text(
-          AppStrings.appName,
+          AppLocalizations.of(context)!.appName,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,

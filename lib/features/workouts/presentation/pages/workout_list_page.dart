@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs/core/constants/app_strings.dart';
-import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/shared/utils/formatters.dart';
 import 'package:strengthlabs/shared/widgets/app_button.dart';
 import 'package:strengthlabs/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/shared/widgets/skeleton_loaders.dart';
 
 class WorkoutListPage extends StatefulWidget {
   const WorkoutListPage({super.key});
@@ -97,18 +96,17 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
             BlocBuilder<WorkoutsCubit, WorkoutsState>(
               builder: (context, state) {
                 if (state is WorkoutsLoading) {
-                  return const SliverFillRemaining(
-                    child: LoadingWidget(message: 'Loading workouts...'),
-                  );
+                  return const WorkoutListSkeleton();
                 }
                 if (state is WorkoutsError) {
+                  final l10n = AppLocalizations.of(context)!;
                   return SliverFillRemaining(
                     child: EmptyStateWidget(
                       icon: Icons.error_outline,
-                      title: 'Could not load workouts',
+                      title: l10n.couldNotLoadWorkouts,
                       subtitle: state.message,
                       action: AppButton(
-                        label: 'Retry',
+                        label: l10n.retry,
                         icon: Icons.refresh,
                         expand: false,
                         onPressed: () =>
@@ -118,14 +116,15 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
                   );
                 }
                 if (state is WorkoutsLoaded) {
+                  final l10n = AppLocalizations.of(context)!;
                   if (state.workouts.isEmpty) {
                     return SliverFillRemaining(
                       child: EmptyStateWidget(
                         icon: Icons.fitness_center,
-                        title: AppStrings.noWorkoutsYet,
-                        subtitle: AppStrings.noWorkoutsSubtitle,
+                        title: l10n.noWorkoutsYet,
+                        subtitle: l10n.noWorkoutsSubtitle,
                         action: AppButton(
-                          label: AppStrings.startWorkout,
+                          label: l10n.startWorkout,
                           icon: Icons.add,
                           expand: false,
                           onPressed: () => context.push('/active-workout'),
@@ -135,14 +134,14 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
                   }
                   final filtered = _applyFilters(state.workouts);
                   if (filtered.isEmpty) {
+                    final l10n = AppLocalizations.of(context)!;
                     return SliverFillRemaining(
                       child: EmptyStateWidget(
                         icon: Icons.filter_list_off,
-                        title: 'No results',
-                        subtitle:
-                            'No workouts match the applied filters',
+                        title: l10n.noResults,
+                        subtitle: l10n.noResultsSubtitle,
                         action: AppButton(
-                          label: 'Clear filters',
+                          label: l10n.clearFilters,
                           icon: Icons.close,
                           expand: false,
                           onPressed: _clearFilters,
@@ -174,34 +173,25 @@ class _WorkoutListPageState extends State<WorkoutListPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/active-workout'),
         icon: const Icon(Icons.add),
-        label: const Text(AppStrings.startWorkout),
+        label: Text(AppLocalizations.of(context)!.startWorkout),
       ),
     );
   }
 
   SliverAppBar _buildAppBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SliverAppBar.large(
-      title: const Text(
-        AppStrings.workouts,
-        style: TextStyle(fontWeight: FontWeight.bold),
+      title: Text(
+        l10n.workouts,
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.person_outline),
-          onPressed: () => _showProfileSheet(context),
+          icon: const Icon(Icons.settings_outlined),
+          onPressed: () => context.push('/settings'),
         ),
         const SizedBox(width: 8),
       ],
-    );
-  }
-
-  void _showProfileSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (sheetContext) => BlocProvider.value(
-        value: context.read<AuthCubit>(),
-        child: const _ProfileSheet(),
-      ),
     );
   }
 }
@@ -225,14 +215,15 @@ class _FilterBar extends StatelessWidget {
   final ValueChanged<MuscleGroup> onGroupToggle;
   final VoidCallback onClearAll;
 
-  String get _dateLabel {
-    if (dateRange == null) return 'Date';
+  String _dateLabel(BuildContext context) {
+    if (dateRange == null) return AppLocalizations.of(context)!.date;
     final f = Formatters.dateShort;
     return '${f(dateRange!.start)} – ${f(dateRange!.end)}';
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 44,
       child: ListView(
@@ -241,7 +232,7 @@ class _FilterBar extends StatelessWidget {
         children: [
           if (hasFilters) ...[
             _Chip(
-              label: 'Clear',
+              label: l10n.clear,
               icon: Icons.close,
               isSelected: false,
               onTap: onClearAll,
@@ -249,7 +240,7 @@ class _FilterBar extends StatelessWidget {
             const SizedBox(width: 4),
           ],
           _Chip(
-            label: _dateLabel,
+            label: _dateLabel(context),
             icon: Icons.calendar_today_outlined,
             isSelected: dateRange != null,
             onTap: onDateTap,
@@ -352,10 +343,16 @@ class _WorkoutCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        workout.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      child: Hero(
+                        tag: 'workout-title-${workout.id}',
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Text(
+                            workout.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -451,74 +448,3 @@ class _MuscleChip extends StatelessWidget {
   }
 }
 
-// ── Profile sheet ─────────────────────────────────────────────────────────────
-
-class _ProfileSheet extends StatelessWidget {
-  const _ProfileSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final authState = context.watch<AuthCubit>().state;
-    final user = authState is AuthAuthenticated ? authState.user : null;
-
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: theme.colorScheme.primaryContainer,
-            child: Icon(Icons.person,
-                size: 32, color: theme.colorScheme.primary),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            user?.name ?? 'Guest',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          Text(
-            user?.email ?? '—',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 24),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text(AppStrings.logout),
-            onTap: () async {
-              final authCubit = context.read<AuthCubit>();
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Log out?'),
-                  content: const Text(
-                      'You will need to sign in again to access your data.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.error,
-                      ),
-                      child: const Text(AppStrings.logout),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed == true) {
-                if (context.mounted) Navigator.pop(context);
-                await authCubit.logout();
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}

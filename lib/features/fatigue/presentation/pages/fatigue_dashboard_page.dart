@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:strengthlabs/core/constants/app_colors.dart';
-import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
 import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
 import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_state.dart';
@@ -12,6 +12,7 @@ import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit
 import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
 import 'package:strengthlabs/shared/widgets/app_button.dart';
 import 'package:strengthlabs/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/shared/widgets/skeleton_loaders.dart';
 
 class FatigueDashboardPage extends StatefulWidget {
   const FatigueDashboardPage({super.key});
@@ -33,9 +34,9 @@ class _FatigueDashboardPageState extends State<FatigueDashboardPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text(
-              AppStrings.fatigue,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              AppLocalizations.of(context)!.fatigue,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             actions: [
               IconButton(
@@ -47,18 +48,17 @@ class _FatigueDashboardPageState extends State<FatigueDashboardPage> {
           BlocBuilder<FatigueCubit, FatigueState>(
             builder: (context, state) {
               if (state is FatigueLoading) {
-                return const SliverFillRemaining(
-                  child: LoadingWidget(message: 'Calculating fatigue...'),
-                );
+                return const FatigueSkeleton();
               }
               if (state is FatigueError) {
+                final l10n = AppLocalizations.of(context)!;
                 return SliverFillRemaining(
                   child: EmptyStateWidget(
                     icon: Icons.error_outline,
-                    title: 'Could not load fatigue',
+                    title: l10n.couldNotLoadFatigue,
                     subtitle: state.message,
                     action: AppButton(
-                      label: 'Retry',
+                      label: l10n.retry,
                       icon: Icons.refresh,
                       expand: false,
                       onPressed: () =>
@@ -119,13 +119,14 @@ class _ReadinessCard extends StatelessWidget {
     return 'Depleted';
   }
 
-  String get _subtitle {
-    if (!summary.hasComputeData) return AppStrings.fatigueLow;
+  String _subtitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (!summary.hasComputeData) return l10n.fatigueLow;
     final s = summary.readinessScore;
-    if (s >= 80) return AppStrings.fatigueLow;
-    if (s >= 60) return AppStrings.fatigueMod;
-    if (s >= 40) return AppStrings.fatigueHigh;
-    return AppStrings.fatigueOver;
+    if (s >= 80) return l10n.fatigueLow;
+    if (s >= 60) return l10n.fatigueMod;
+    if (s >= 40) return l10n.fatigueHigh;
+    return l10n.fatigueOver;
   }
 
   @override
@@ -142,7 +143,7 @@ class _ReadinessCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              summary.hasComputeData ? 'Readiness Score' : AppStrings.overallFatigue,
+              summary.hasComputeData ? AppLocalizations.of(context)!.readinessScore : AppLocalizations.of(context)!.overallFatigue,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -196,7 +197,7 @@ class _ReadinessCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              _subtitle,
+              _subtitle(context),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -205,12 +206,13 @@ class _ReadinessCard extends StatelessWidget {
             if (!summary.hasComputeData) ...[
               const SizedBox(height: 12),
               Builder(builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
                 final wState = context.watch<WorkoutsCubit>().state;
                 final hasWorkouts =
                     wState is WorkoutsLoaded && wState.workouts.isNotEmpty;
                 final msg = hasWorkouts
-                    ? 'Compute engine unavailable — try again later'
-                    : 'Log your first workout to see metrics';
+                    ? l10n.computeUnavailable
+                    : l10n.loadingFatigueData;
                 return Text(
                   msg,
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -288,14 +290,14 @@ class _MetricsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: _MetricTile(
             label: 'ATL',
             value: summary.atl.toStringAsFixed(1),
-            subtitle: 'Acute load',
-            hint: '7-day avg',
+            subtitle: l10n.acuteLoad,
           ),
         ),
         const SizedBox(width: 8),
@@ -303,8 +305,7 @@ class _MetricsRow extends StatelessWidget {
           child: _MetricTile(
             label: 'CTL',
             value: summary.ctl.toStringAsFixed(1),
-            subtitle: 'Chronic load',
-            hint: '42-day avg',
+            subtitle: l10n.chronicLoad,
           ),
         ),
         const SizedBox(width: 8),
@@ -312,7 +313,7 @@ class _MetricsRow extends StatelessWidget {
           child: _MetricTile(
             label: 'TSB',
             value: '${summary.tsb >= 0 ? '+' : ''}${summary.tsb.toStringAsFixed(1)}',
-            subtitle: 'Balance',
+            subtitle: l10n.balance,
             valueColor: summary.tsb >= 0 ? const Color(0xFF4CAF50) : const Color(0xFFEF5350),
           ),
         ),
@@ -321,7 +322,7 @@ class _MetricsRow extends StatelessWidget {
           child: _MetricTile(
             label: 'ACWR',
             value: summary.acwr.toStringAsFixed(2),
-            subtitle: 'Workload ratio',
+            subtitle: l10n.workloadRatio,
             valueColor: _acwrColor(summary.acwr),
           ),
         ),
@@ -341,14 +342,12 @@ class _MetricTile extends StatelessWidget {
     required this.label,
     required this.value,
     required this.subtitle,
-    this.hint,
     this.valueColor,
   });
 
   final String label;
   final String value;
   final String subtitle;
-  final String? hint;
   final Color? valueColor;
 
   @override
@@ -418,7 +417,7 @@ class _RiskCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Risk Assessment',
+                  AppLocalizations.of(context)!.riskAssessment,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -444,17 +443,17 @@ class _RiskCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _RiskBar(
-              label: 'Injury Risk',
+              label: AppLocalizations.of(context)!.injuryRisk,
               value: summary.injuryRiskScore,
             ),
             const SizedBox(height: 10),
             _RiskBar(
-              label: 'Overtraining Risk',
+              label: AppLocalizations.of(context)!.overtrainingRisk,
               value: summary.overtrainingRiskScore,
             ),
             const SizedBox(height: 10),
             _RiskBar(
-              label: 'Composite Risk',
+              label: AppLocalizations.of(context)!.compositeRisk,
               value: summary.compositeRiskScore,
               isBold: true,
             ),
@@ -570,7 +569,7 @@ class _RecommendationsCard extends StatelessWidget {
                     size: 18, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'Recommendations',
+                  AppLocalizations.of(context)!.recommendations_,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -627,7 +626,7 @@ class _WeeklyTrendCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '7-Day Trend',
+              AppLocalizations.of(context)!.sevenDayTrend,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -713,7 +712,7 @@ class _MuscleVolumeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppStrings.weeklyVolume,
+              AppLocalizations.of(context)!.weeklyVolume,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),

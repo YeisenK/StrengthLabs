@@ -11,6 +11,7 @@ import 'package:strengthlabs/features/fatigue/presentation/pages/fatigue_dashboa
 import 'package:strengthlabs/features/plan/presentation/pages/plan_page.dart';
 import 'package:strengthlabs/features/routines/presentation/pages/routine_detail_page.dart';
 import 'package:strengthlabs/features/routines/presentation/pages/routines_page.dart';
+import 'package:strengthlabs/features/settings/presentation/pages/settings_page.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
 import 'package:strengthlabs/features/workouts/presentation/pages/active_workout_page.dart';
 import 'package:strengthlabs/features/workouts/presentation/pages/workout_detail_page.dart';
@@ -30,12 +31,13 @@ class AppRouter {
         final authState = authCubit.state;
         final loc = state.matchedLocation;
         final isAuthRoute = loc == '/login' || loc == '/register';
+        final isPublicRoute = isAuthRoute || loc == '/settings';
 
         // Still checking stored credentials — don't redirect yet
         if (authState is AuthInitial || authState is AuthLoading) return null;
 
         if ((authState is AuthUnauthenticated || authState is AuthError) &&
-            !isAuthRoute) {
+            !isPublicRoute) {
           return '/login';
         }
 
@@ -53,6 +55,10 @@ class AppRouter {
         GoRoute(
           path: '/register',
           builder: (_, _) => const RegisterPage(),
+        ),
+        GoRoute(
+          path: '/settings',
+          builder: (_, _) => const SettingsPage(),
         ),
         GoRoute(
           path: '/active-workout',

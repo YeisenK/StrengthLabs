@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs/core/constants/app_strings.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
 import 'package:strengthlabs/shared/utils/validators.dart';
@@ -21,6 +21,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
@@ -30,6 +33,9 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
   }
 
@@ -85,25 +91,33 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 32),
                       AppTextField(
-                        label: AppStrings.name,
+                        label: AppLocalizations.of(context)!.name,
                         controller: _nameCtrl,
                         textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_emailFocus),
                         validator: (v) => Validators.required(v, 'Name'),
                       ),
                       const SizedBox(height: 14),
                       AppTextField(
-                        label: AppStrings.email,
+                        label: AppLocalizations.of(context)!.email,
                         controller: _emailCtrl,
+                        focusNode: _emailFocus,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_passwordFocus),
                         validator: Validators.email,
                       ),
                       const SizedBox(height: 14),
                       AppTextField(
-                        label: AppStrings.password,
+                        label: AppLocalizations.of(context)!.password,
                         controller: _passwordCtrl,
+                        focusNode: _passwordFocus,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_confirmFocus),
                         validator: Validators.password,
                         suffixIcon: IconButton(
                           icon: Icon(_obscurePassword
@@ -115,8 +129,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 14),
                       AppTextField(
-                        label: AppStrings.confirmPassword,
+                        label: AppLocalizations.of(context)!.confirmPassword,
                         controller: _confirmCtrl,
+                        focusNode: _confirmFocus,
                         obscureText: _obscureConfirm,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(context),
@@ -133,7 +148,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       const SizedBox(height: 28),
                       BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) => AppButton(
-                          label: AppStrings.register,
+                          label: AppLocalizations.of(context)!.register,
                           isLoading: state is AuthLoading,
                           onPressed: () => _submit(context),
                         ),
@@ -144,13 +159,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              AppStrings.alreadyAccount,
+                              AppLocalizations.of(context)!.alreadyAccount,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             GestureDetector(
                               onTap: () => context.pop(),
                               child: Text(
-                                AppStrings.signIn,
+                                AppLocalizations.of(context)!.signIn,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w600,

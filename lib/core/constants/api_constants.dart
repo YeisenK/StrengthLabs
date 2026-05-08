@@ -9,6 +9,7 @@ class ApiConstants {
     defaultValue: 'http://10.0.2.2:8000',
   );
 
+
   // Auth
   static const register = '/auth/register';
   static const login = '/auth/login';
