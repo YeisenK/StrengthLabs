@@ -27,4 +27,12 @@ class RoutinesCubit extends Cubit<RoutinesState> {
       return null;
     }
   }
+
+  Future<Routine?> fetchDetail(String id) async {
+    try {
+      return await _repository.getRoutine(id);
+    } catch (_) {
+      return null;
+    }
+  }
 }

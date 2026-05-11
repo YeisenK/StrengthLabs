@@ -30,6 +30,18 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
       length: _routine?.days.length ?? 0,
       vsync: this,
     );
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    final detail = await context.read<RoutinesCubit>().fetchDetail(widget.id);
+    if (detail != null && mounted) {
+      _tabController.dispose();
+      setState(() {
+        _routine = detail;
+        _tabController = TabController(length: detail.days.length, vsync: this);
+      });
+    }
   }
 
   @override
