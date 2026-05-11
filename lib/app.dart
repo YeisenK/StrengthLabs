@@ -51,6 +51,7 @@ class _AppState extends State<App> {
 
     _router = AppRouter.createRouter(_authCubit);
 
+    AppRouter.primeOnboardingFlag();
     _authCubit.checkAuthStatus();
     _settingsCubit.load();
   }
@@ -64,7 +65,13 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: _workoutRepo),
+        RepositoryProvider.value(value: _fatigueRepo),
+        RepositoryProvider.value(value: _routineRepo),
+      ],
+      child: MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _authCubit),
         BlocProvider.value(value: _settingsCubit),
@@ -89,6 +96,7 @@ class _AppState extends State<App> {
           ],
           routerConfig: _router,
         ),
+      ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strengthlabs/core/constants/app_colors.dart';
 import 'package:strengthlabs/l10n/app_localizations.dart';
+import 'package:strengthlabs/features/workouts/data/workout_repository.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_state.dart';
@@ -32,7 +33,7 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
   @override
   void initState() {
     super.initState();
-    _cubit = ActiveWorkoutCubit();
+    _cubit = ActiveWorkoutCubit(context.read<WorkoutRepository>());
     if (widget.template != null) _cubit.loadTemplate(widget.template!);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _elapsed.value = _cubit.state.elapsed;
@@ -320,7 +321,7 @@ class _ActiveExerciseCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            'Target: ${activeExercise.sets.length} × ${activeExercise.targetReps!}',
+                            AppLocalizations.of(context)!.targetLabel(activeExercise.sets.length, activeExercise.targetReps!),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.w500,
@@ -340,18 +341,21 @@ class _ActiveExerciseCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             // Header row
-            Row(
-              children: const [
-                SizedBox(width: 32),
-                Expanded(flex: 2, child: _ColHeader('WEIGHT')),
-                SizedBox(width: 8),
-                Expanded(flex: 2, child: _ColHeader('REPS')),
-                SizedBox(width: 8),
-                Expanded(flex: 1, child: _ColHeader('RPE')),
-                SizedBox(width: 8),
-                SizedBox(width: 32),
-              ],
-            ),
+            Builder(builder: (ctx) {
+              final l10n = AppLocalizations.of(ctx)!;
+              return Row(
+                children: [
+                  const SizedBox(width: 32),
+                  Expanded(flex: 2, child: _ColHeader(l10n.colHeaderWeight)),
+                  const SizedBox(width: 8),
+                  Expanded(flex: 2, child: _ColHeader(l10n.colHeaderReps)),
+                  const SizedBox(width: 8),
+                  Expanded(flex: 1, child: _ColHeader(l10n.rpe)),
+                  const SizedBox(width: 8),
+                  const SizedBox(width: 32),
+                ],
+              );
+            }),
             const SizedBox(height: 4),
             ...activeExercise.sets.asMap().entries.map(
                   (entry) => _ActiveSetRow(
@@ -702,7 +706,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                 ),
                 ...MuscleGroup.values.map(
                   (mg) => _FilterChip(
-                    label: mg.label,
+                    label: mg.localized(AppLocalizations.of(context)!),
                     isSelected: _selectedGroup == mg,
                     onTap: () => setState(
                       () => _selectedGroup =
@@ -726,7 +730,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                 final ex = _filtered[i];
                 return ListTile(
                   title: Text(ex.name),
-                  subtitle: Text(ex.muscleGroup.label),
+                  subtitle: Text(ex.muscleGroup.localized(AppLocalizations.of(context)!)),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -780,7 +784,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                 items: MuscleGroup.values
                     .map((mg) => DropdownMenuItem(
                           value: mg,
-                          child: Text(mg.label),
+                          child: Text(mg.localized(l10n)),
                         ))
                     .toList(),
                 onChanged: (v) {

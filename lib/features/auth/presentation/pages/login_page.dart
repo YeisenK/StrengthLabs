@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
 import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
@@ -38,6 +40,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final v = FormValidators(l10n);
+
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
@@ -60,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                 constraints: const BoxConstraints(maxWidth: 400),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -67,34 +73,34 @@ class _LoginPageState extends State<LoginPage> {
                       _Logo(),
                       const SizedBox(height: 40),
                       Text(
-                        'Welcome back',
+                        l10n.loginWelcomeTitle,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Log in to continue your training journey',
+                        l10n.loginWelcomeSubtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 36),
                       AppTextField(
-                        label: AppLocalizations.of(context)!.email,
+                        label: l10n.email,
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        validator: Validators.email,
+                        validator: v.email,
                       ),
                       const SizedBox(height: 16),
                       AppTextField(
-                        label: AppLocalizations.of(context)!.password,
+                        label: l10n.password,
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(context),
-                        validator: Validators.password,
+                        validator: v.password,
                         suffixIcon: IconButton(
                           icon: Icon(_obscurePassword
                               ? Icons.visibility_outlined
@@ -106,17 +112,25 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 28),
                       BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) => AppButton(
-                          label: AppLocalizations.of(context)!.login,
+                          label: l10n.login,
                           isLoading: state is AuthLoading,
                           onPressed: () => _submit(context),
                         ),
                       ),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 12),
+                        _DemoCredentialsHint(
+                          onTap: () {
+                            _emailCtrl.text = DemoMode.email;
+                            _passwordCtrl.text = DemoMode.password;
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       _OrDivider(),
                       const SizedBox(height: 16),
                       _GoogleSignInButton(
-                        onTap: () =>
-                            context.read<AuthCubit>().loginWithGoogle(),
+                        onTap: () => context.read<AuthCubit>().loginWithGoogle(),
                       ),
                       const SizedBox(height: 24),
                       Center(
@@ -124,13 +138,13 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              AppLocalizations.of(context)!.noAccount,
+                              l10n.noAccount,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             GestureDetector(
                               onTap: () => context.push('/register'),
                               child: Text(
-                                AppLocalizations.of(context)!.signUp,
+                                l10n.signUp,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w600,
@@ -188,7 +202,7 @@ class _OrDivider extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
-            'or',
+            AppLocalizations.of(context)!.loginOrDivider,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -228,7 +242,7 @@ class _GoogleSignInButton extends StatelessWidget {
                     // Google "G" — drawn with colored quadrants
                     _GoogleGLogo(),
                     const SizedBox(width: 12),
-                    const Text('Continue with Google'),
+                    Text(AppLocalizations.of(context)!.loginContinueGoogle),
                   ],
                 ),
         );
@@ -295,4 +309,43 @@ class _GoogleGPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_GoogleGPainter old) => false;
+}
+
+/// Visible only in debug builds — pre-fills demo credentials so the
+/// evaluator can try the offline mode without typing.
+class _DemoCredentialsHint extends StatelessWidget {
+  const _DemoCredentialsHint({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.science_outlined, size: 16, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Demo: ${DemoMode.email} / ${DemoMode.password} (tap to fill)',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

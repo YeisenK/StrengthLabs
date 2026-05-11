@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 
 class ExportResult {
   const ExportResult({required this.rowCount, required this.path, required this.shared});
@@ -34,8 +35,8 @@ class ExportService {
 
   /// Exports [workouts] to a .csv file. On mobile opens the share sheet;
   /// on desktop saves to the user's Downloads folder.
-  Future<ExportResult> exportToCsv(List<Workout> workouts) async {
-    final rows = _buildRows(workouts);
+  Future<ExportResult> exportToCsv(List<Workout> workouts, AppLocalizations l10n) async {
+    final rows = _buildRows(workouts, l10n);
     final buffer = StringBuffer();
 
     // Header
@@ -56,8 +57,8 @@ class ExportService {
 
   /// Exports [workouts] to a .xlsx file. On mobile opens the share sheet;
   /// on desktop saves to the user's Downloads folder.
-  Future<ExportResult> exportToExcel(List<Workout> workouts) async {
-    final rows = _buildRows(workouts);
+  Future<ExportResult> exportToExcel(List<Workout> workouts, AppLocalizations l10n) async {
+    final rows = _buildRows(workouts, l10n);
     final excel = Excel.createExcel();
 
     // Remove the default empty sheet
@@ -115,7 +116,7 @@ class ExportService {
   // ---------------------------------------------------------------------------
 
   /// Builds one row per set across all [workouts], sorted by date desc.
-  List<List<dynamic>> _buildRows(List<Workout> workouts) {
+  List<List<dynamic>> _buildRows(List<Workout> workouts, AppLocalizations l10n) {
     final rows = <List<dynamic>>[];
     final sorted = [...workouts]..sort((a, b) => b.date.compareTo(a.date));
 
@@ -128,7 +129,7 @@ class ExportService {
             dateStr,
             workout.name,
             we.exercise.name,
-            we.exercise.muscleGroup.label,
+            we.exercise.muscleGroup.localized(l10n),
             i + 1,
             s.weight,
             s.reps,

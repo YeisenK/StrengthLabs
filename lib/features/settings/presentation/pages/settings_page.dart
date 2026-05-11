@@ -126,7 +126,6 @@ class SettingsPage extends StatelessWidget {
 
   void _confirmLogout(BuildContext context, AppLocalizations l10n) async {
     final authCubit = context.read<AuthCubit>();
-    final navigator = Navigator.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -148,7 +147,8 @@ class SettingsPage extends StatelessWidget {
       ),
     );
     if (confirmed == true) {
-      navigator.pop();
+      // El router escucha AuthUnauthenticated y redirige a /login automáticamente.
+      // No hacer navigator.pop() manual — causaba race condition entre el pop y el redirect.
       await authCubit.logout();
     }
   }

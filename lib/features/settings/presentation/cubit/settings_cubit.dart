@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
 import 'package:strengthlabs/features/settings/presentation/cubit/settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
@@ -17,6 +18,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     final localeCode = prefs.getString(_keyLocale);
     final unitIndex = prefs.getInt(_keyWeightUnit);
 
+    DioClient.languageCode = localeCode ?? 'en';
     emit(SettingsState(
       themeMode: themeIndex != null
           ? ThemeMode.values[themeIndex]
@@ -37,6 +39,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setLocale(Locale locale) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLocale, locale.languageCode);
+    DioClient.languageCode = locale.languageCode;
     emit(state.copyWith(locale: locale));
   }
 

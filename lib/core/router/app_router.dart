@@ -8,6 +8,8 @@ import 'package:strengthlabs/features/auth/presentation/pages/login_page.dart';
 import 'package:strengthlabs/features/auth/presentation/pages/register_page.dart';
 import 'package:strengthlabs/features/export/presentation/pages/export_page.dart';
 import 'package:strengthlabs/features/fatigue/presentation/pages/fatigue_dashboard_page.dart';
+import 'package:strengthlabs/features/onboarding/data/onboarding_prefs.dart';
+import 'package:strengthlabs/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:strengthlabs/features/plan/presentation/pages/plan_page.dart';
 import 'package:strengthlabs/features/routines/presentation/pages/routine_detail_page.dart';
 import 'package:strengthlabs/features/routines/presentation/pages/routines_page.dart';
@@ -21,6 +23,20 @@ import 'package:strengthlabs/shared/widgets/main_shell.dart';
 class AppRouter {
   AppRouter._();
 
+  /// In-memory cache so the router redirect can run synchronously.
+  /// Updated optimistically when onboarding finishes.
+  static bool _onboardingCompleted = false;
+  static bool _onboardingChecked = false;
+
+  static Future<void> primeOnboardingFlag() async {
+    _onboardingCompleted = await OnboardingPrefs.isCompleted();
+    _onboardingChecked = true;
+  }
+
+  static void markOnboardingCompleted() {
+    _onboardingCompleted = true;
+  }
+
   static GoRouter createRouter(AuthCubit authCubit) {
     final notifier = _AuthNotifier(authCubit);
 
@@ -32,8 +48,8 @@ class AppRouter {
         final loc = state.matchedLocation;
         final isAuthRoute = loc == '/login' || loc == '/register';
         final isPublicRoute = isAuthRoute || loc == '/settings';
+        final isOnboardingRoute = loc == '/onboarding';
 
-        // Still checking stored credentials — don't redirect yet
         if (authState is AuthInitial || authState is AuthLoading) return null;
 
         if ((authState is AuthUnauthenticated || authState is AuthError) &&
@@ -41,8 +57,18 @@ class AppRouter {
           return '/login';
         }
 
-        if (authState is AuthAuthenticated && isAuthRoute) {
-          return '/workouts';
+        if (authState is AuthAuthenticated) {
+          if (isAuthRoute) {
+            return _onboardingChecked && !_onboardingCompleted
+                ? '/onboarding'
+                : '/workouts';
+          }
+          if (_onboardingChecked && !_onboardingCompleted && !isOnboardingRoute) {
+            return '/onboarding';
+          }
+          if (_onboardingCompleted && isOnboardingRoute) {
+            return '/workouts';
+          }
         }
 
         return null;
@@ -55,6 +81,10 @@ class AppRouter {
         GoRoute(
           path: '/register',
           builder: (_, _) => const RegisterPage(),
+        ),
+        GoRoute(
+          path: '/onboarding',
+          builder: (_, _) => const OnboardingPage(),
         ),
         GoRoute(
           path: '/settings',

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:strengthlabs/features/workouts/data/workout_repository.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
@@ -28,12 +29,14 @@ class ActiveWorkoutTemplate {
 }
 
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
-  ActiveWorkoutCubit()
+  ActiveWorkoutCubit(this._repository)
       : super(ActiveWorkoutState(
           name: 'Workout',
           startTime: DateTime.now(),
           exercises: const [],
         ));
+
+  final WorkoutRepository _repository;
 
   int _idCounter = 0;
   String _nextId() => '${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
@@ -56,12 +59,53 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   }
 
   void addExercise(Exercise exercise) {
+    final newExerciseId = _nextId();
+    final newSetId = _nextId();
     final newExercise = ActiveExercise(
-      id: _nextId(),
+      id: newExerciseId,
       exercise: exercise,
-      sets: [ActiveSet(id: _nextId())],
+      sets: [ActiveSet(id: newSetId)],
     );
     emit(state.copyWith(exercises: [...state.exercises, newExercise]));
+
+    // Best-effort prefetch of the user's last set for this exercise.
+    // Failures are silent — the user just sees empty fields, no error.
+    _prefillLastSet(exercise.id, newExerciseId, newSetId);
+  }
+
+  Future<void> _prefillLastSet(
+      String exerciseCatalogId, String activeExerciseId, String activeSetId) async {
+    try {
+      final last = await _repository.getLastSet(exerciseCatalogId);
+      if (last == null) return;
+
+      // Stale-check: the set may have been edited, removed or completed
+      // before the network round-trip finished. Only prefill if it's
+      // still empty.
+      final exercise = state.exercises.firstWhere(
+        (e) => e.id == activeExerciseId,
+        orElse: () => ActiveExercise(id: '', exercise: const Exercise(
+          id: '', name: '', muscleGroup: MuscleGroup.core,
+        ), sets: const []),
+      );
+      if (exercise.id.isEmpty) return;
+      final set = exercise.sets.firstWhere(
+        (s) => s.id == activeSetId,
+        orElse: () => ActiveSet(id: ''),
+      );
+      if (set.id.isEmpty) return;
+      if (set.weight.isNotEmpty || set.reps.isNotEmpty) return;
+
+      updateSet(
+        activeExerciseId,
+        activeSetId,
+        weight: last.weight?.toString() ?? '',
+        reps: last.reps?.toString() ?? '',
+        rpe: last.rpe,
+      );
+    } catch (_) {
+      // Silent: prefill is a nice-to-have, not a required signal
+    }
   }
 
   void removeExercise(String exerciseId) {

@@ -52,9 +52,10 @@ class _ExportPageState extends State<ExportPage> {
     });
 
     try {
+      final l10n = AppLocalizations.of(context)!;
       final result = isXlsx
-          ? await _service.exportToExcel(workouts)
-          : await _service.exportToCsv(workouts);
+          ? await _service.exportToExcel(workouts, l10n)
+          : await _service.exportToCsv(workouts, l10n);
 
       if (!mounted) return;
       HapticFeedback.mediumImpact();

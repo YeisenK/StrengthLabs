@@ -1,168 +1,125 @@
-# Strength Labs
+# StrengthLabs
 
-Aplicación móvil para el registro, seguimiento y análisis de entrenamientos físicos.
----
-
-## Descripción
-
-Strength Labs es un MVP de aplicación móvil (iOS y Android) orientada a usuarios de gimnasio de todos los niveles. Permite registrar sesiones de entrenamiento con ejercicios, series, repeticiones, peso y RPE; consultar el historial completo con filtros por fecha y grupo muscular; calcular la fatiga y detectar sobreentrenamiento mediante un motor de lógica basado en RPE y volumen semanal; acceder a rutinas predeterminadas adaptadas al nivel y objetivo del usuario; y exportar los datos en formato Excel (.xlsx) y CSV.
+Aplicación móvil multiplataforma (Android e iOS) para registro y análisis de entrenamientos de fuerza. Calcula métricas científicas de fatiga (ATL, CTL, TSB, ACWR), riesgo de lesión y genera planes de periodización basados en el estado real del atleta.
 
 ---
 
-## Stack tecnológico
+## Stack técnico
 
 | Capa | Tecnología |
-|------|-----------|
-| Frontend móvil | Flutter 3.x (iOS & Android) |
-| Backend API | Python 3.11 + FastAPI |
+|---|---|
+| Frontend móvil | Flutter 3.x · BLoC 9.x · go_router 17.x · Dio 5.x |
+| Backend API | Java 21 · Spring Boot 4.0.x · Spring Security · Spring Data JPA |
+| Compute engine | Python 3.12 · FastAPI · NumPy · SciPy |
 | Base de datos | PostgreSQL 16 |
-| ORM | SQLAlchemy 2.x + Alembic |
-| Autenticación | JWT (python-jose + bcrypt) |
-| Servidor | VPS Ubuntu 22.04 + Nginx + Gunicorn |
-| Exportación | openpyxl / csv |
+| Cache | Redis 7 |
+| Auth | JWT RS256 · Google Sign-In |
+| Exportación local | `excel` + `share_plus` (en dispositivo) |
+
+> El backend vive en un repositorio separado: [`~/StrengthLabsBackend`](../StrengthLabsBackend/README.md).
 
 ---
 
-## Estructura del repositorio
+## Repositorios
 
 ```
-strength-labs/
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── config.py
-│   │   ├── database.py
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── routers/
-│   │   ├── services/
-│   │   └── core/
-│   ├── alembic/
-│   ├── tests/
-│   ├── requirements.txt
-│   ├── .env.example
-│   └── Dockerfile
-│
-└── mobile/
-    ├── lib/
-    │   ├── main.dart
-    │   ├── app.dart
-    │   ├── core/
-    │   ├── features/
-    │   └── shared/
-    ├── assets/
-    └── pubspec.yaml
+~/StrengthLabs/          ← este repo, frontend Flutter
+~/StrengthLabsBackend/   ← backend Java + compute engine Python
+```
+
+---
+
+## Estructura del frontend
+
+```
+lib/
+├── features/
+│   ├── auth/            ← login, register, Google Sign-In
+│   ├── workouts/        ← CRUD + sesión activa con timer
+│   ├── routines/        ← rutinas predefinidas
+│   ├── fatigue/         ← dashboard ATL/CTL/TSB/ACWR/readiness
+│   ├── plan/            ← plan semanal generado por compute engine
+│   ├── export/          ← exportar historial a CSV/XLSX
+│   └── settings/        ← cuenta, unidades, tema, idioma, logout
+├── core/
+│   ├── constants/       ← api_constants.dart, app_colors.dart
+│   └── storage/         ← token_storage.dart (flutter_secure_storage)
+├── shared/
+│   └── widgets/         ← skeleton loaders, app_button, app_text_field
+└── l10n/                ← strings EN/ES (app_en.arb, app_es.arb)
 ```
 
 ---
 
 ## Requisitos previos
 
-Backend: Python 3.11+, PostgreSQL 16, pip.
-
-Mobile: Flutter 3.x SDK, Android Studio o Xcode según la plataforma.
+- Flutter 3.x SDK (`flutter doctor`)
+- Backend corriendo en `localhost:8000` (ver instrucciones en `~/StrengthLabsBackend/README.md`)
 
 ---
 
-## Instalación local
+## Arrancar en local
 
-### Backend
+### 1. Levantar el backend primero
 
 ```bash
-git clone https://github.com/tu-usuario/strength-labs.git
-cd strength-labs/backend
+# En ~/StrengthLabsBackend
+docker compose -f docker/docker-compose.yml up postgres redis -d
+DB_PASSWORD=changeme ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 
-python -m venv venv
-source venv/bin/activate
-
-pip install -r requirements.txt
-
-cp .env.example .env
-# Editar .env con las credenciales correspondientes
-
-alembic upgrade head
-
-uvicorn app.main:app --reload
+# Compute engine (necesario para dashboard de fatiga)
+cd recursos
+uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-La API estará disponible en `http://localhost:8000`.
-Documentación interactiva en `http://localhost:8000/docs`.
-
-### Mobile
+### 2. Arrancar el frontend
 
 ```bash
-cd strength-labs/mobile
+cd ~/StrengthLabs
 flutter pub get
 flutter run
 ```
 
-Por defecto la app apunta a `http://10.0.2.2:8000` (loopback del emulador de Android al host). Para correr contra un backend distinto (LAN, device físico, staging), pasá la URL al arrancar:
+La app se conecta a `http://10.0.2.2:8000` desde el emulador Android (loopback al host). Para device físico:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=http://192.168.1.42:8000
-```
-
-Para iOS simulator el default sirve si el backend está en `localhost`. Para un dispositivo físico usá la IP LAN del host.
-
----
-
-## Variables de entorno
-
-Crea un archivo `.env` en `backend/` con el siguiente contenido:
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/strengthlabs_dev
-SECRET_KEY=tu_clave_secreta_muy_larga_y_aleatoria
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-REFRESH_TOKEN_EXPIRE_DAYS=7
+flutter run --dart-define=API_BASE_URL=http://192.168.X.X:8000
 ```
 
 ---
 
-## Endpoints principales
+## Endpoints principales del backend
+
+Documentación interactiva en `http://localhost:8000/swagger-ui/index.html`.
 
 | Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/auth/register` | Registro de usuario |
-| POST | `/auth/login` | Login y obtención de JWT |
-| GET | `/workouts` | Historial de sesiones |
-| POST | `/workouts` | Nueva sesión de entrenamiento |
-| GET | `/fatigue/summary` | Índice de fatiga y alerta |
-| GET | `/routines` | Rutinas sugeridas |
-| GET | `/export/xlsx` | Exportar historial a Excel |
-| GET | `/export/csv` | Exportar historial a CSV |
-
-Documentación completa disponible en `/docs` (Swagger) y `/redoc`.
-
----
-
-## Despliegue en VPS
-
-```bash
-git pull origin main
-alembic upgrade head
-systemctl restart strengthlabs-api
-
-# Verificar logs
-journalctl -u strengthlabs-api -f
-```
+|---|---|---|
+| POST | `/auth/register` | Registro con email/password |
+| POST | `/auth/login` | Login → access + refresh token |
+| POST | `/auth/refresh` | Renovar access token |
+| POST | `/auth/google` | Login con Google (id_token) |
+| GET | `/auth/me` | Datos del usuario autenticado |
+| GET | `/workouts` | Historial con jerarquía exercises → sets |
+| POST | `/workouts` | Crear sesión de entrenamiento |
+| GET/PUT/DELETE | `/workouts/{id}` | Detalle, editar, borrar |
+| GET | `/exercises` | Catálogo global + custom del usuario |
+| POST | `/exercises` | Crear ejercicio custom |
+| GET | `/routines` | Rutinas predefinidas (filtro: `?level=`) |
+| GET | `/fatigue/summary` | 19 métricas: ATL, CTL, TSB, ACWR, readiness… |
+| GET | `/export/csv` | Historial en CSV (server-side) |
+| GET | `/export/xlsx` | Historial en Excel (server-side) |
 
 ---
 
-## Arquitectura
+## Idiomas
 
-Ver el documento completo en `docs/arquitectura.tex`.
+La app soporta inglés y español. Strings en `lib/l10n/app_en.arb` y `lib/l10n/app_es.arb`. El idioma del sistema se detecta automáticamente; el usuario puede cambiarlo en Settings.
 
 ---
 
-## Roadmap
+## Estado del proyecto
 
-- [x] MVP — Registro de entrenamientos y cálculo de fatiga
-- [ ] v1.1 — Notificaciones push (FCM)
-- [ ] v1.2 — Generación dinámica de rutinas con IA
-- [ ] v1.3 — Integración con Apple Health / Google Fit
-- [ ] v2.0 — Panel de administración web
+Ver [`documentacion/FASES_IMPLEMENTACION.md`](documentacion/FASES_IMPLEMENTACION.md) para el plan de trabajo actual.
 
 ---
 

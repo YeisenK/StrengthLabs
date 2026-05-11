@@ -269,6 +269,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get compositeRisk => 'Composite Risk';
 
   @override
+  String get glossaryAtlTooltip =>
+      'Acute Training Load — your fatigue from the last 7 days. High ATL means you have trained hard recently.';
+
+  @override
+  String get glossaryCtlTooltip =>
+      'Chronic Training Load — your fitness level based on the last 42 days. A rising CTL indicates improving fitness.';
+
+  @override
+  String get glossaryTsbTooltip =>
+      'Training Stress Balance — fitness (CTL) minus fatigue (ATL). Positive = fresh and ready; negative = accumulated fatigue.';
+
+  @override
+  String get glossaryAcwrTooltip =>
+      'Acute:Chronic Workload Ratio — last week\'s load vs. your 4-week average. Safe range: 0.8–1.3. Above 1.5 raises injury risk.';
+
+  @override
   String get trainingPlan => 'Training Plan';
 
   @override
@@ -382,4 +398,202 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noRoutinesSubtitle => 'Create a routine to organize your training';
+
+  @override
+  String get loginWelcomeTitle => 'Welcome back';
+
+  @override
+  String get loginWelcomeSubtitle => 'Log in to continue your training journey';
+
+  @override
+  String get loginOrDivider => 'or';
+
+  @override
+  String get loginContinueGoogle => 'Continue with Google';
+
+  @override
+  String get registerTitle => 'Create account';
+
+  @override
+  String get registerSubtitle => 'Start tracking your strength journey';
+
+  @override
+  String get validatorEmailRequired => 'Email is required';
+
+  @override
+  String get validatorEmailInvalid => 'Enter a valid email';
+
+  @override
+  String get validatorPasswordRequired => 'Password is required';
+
+  @override
+  String get validatorPasswordTooShort => 'At least 6 characters required';
+
+  @override
+  String get validatorConfirmRequired => 'Please confirm your password';
+
+  @override
+  String get validatorConfirmMismatch => 'Passwords do not match';
+
+  @override
+  String validatorFieldRequired(String field) {
+    return '$field is required';
+  }
+
+  @override
+  String validatorFieldInvalid(String field) {
+    return 'Enter a valid $field';
+  }
+
+  @override
+  String get levelBeginner => 'Beginner';
+
+  @override
+  String get levelIntermediate => 'Intermediate';
+
+  @override
+  String get levelAdvanced => 'Advanced';
+
+  @override
+  String get goalStrength => 'Strength';
+
+  @override
+  String get goalHypertrophy => 'Hypertrophy';
+
+  @override
+  String get goalEndurance => 'Endurance';
+
+  @override
+  String get goalGeneralFitness => 'General Fitness';
+
+  @override
+  String get muscleChest => 'Chest';
+
+  @override
+  String get muscleBack => 'Back';
+
+  @override
+  String get muscleLegs => 'Legs';
+
+  @override
+  String get muscleShoulders => 'Shoulders';
+
+  @override
+  String get muscleArms => 'Arms';
+
+  @override
+  String get muscleCore => 'Core';
+
+  @override
+  String daysPerWeek(int count) {
+    return '$count days / week';
+  }
+
+  @override
+  String trainingDaysCount(int count) {
+    return '$count training days';
+  }
+
+  @override
+  String exercisesCount(int count) {
+    return '$count exercises';
+  }
+
+  @override
+  String get readinessLabelFresh => 'Fresh';
+
+  @override
+  String get readinessLabelReady => 'Ready';
+
+  @override
+  String get readinessLabelModerate => 'Moderate';
+
+  @override
+  String get readinessLabelFatigued => 'Fatigued';
+
+  @override
+  String get readinessLabelDepleted => 'Depleted';
+
+  @override
+  String get riskLow => 'LOW';
+
+  @override
+  String get riskModerate => 'MODERATE';
+
+  @override
+  String get riskHigh => 'HIGH';
+
+  @override
+  String get riskCritical => 'CRITICAL';
+
+  @override
+  String get dayMon => 'Mo';
+
+  @override
+  String get dayTue => 'Tu';
+
+  @override
+  String get dayWed => 'We';
+
+  @override
+  String get dayThu => 'Th';
+
+  @override
+  String get dayFri => 'Fr';
+
+  @override
+  String get daySat => 'Sa';
+
+  @override
+  String get daySun => 'Su';
+
+  @override
+  String targetLabel(int sets, String reps) {
+    return 'Target: $sets × $reps';
+  }
+
+  @override
+  String get colHeaderWeight => 'WEIGHT';
+
+  @override
+  String get colHeaderReps => 'REPS';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingStart => 'Let\'s start';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to StrengthLabs';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Track your workouts. Monitor fatigue. Train smarter — with science-based metrics like ACWR, TSB and readiness score.';
+
+  @override
+  String get onboardingUnitTitle => 'Choose your unit';
+
+  @override
+  String get onboardingUnitSubtitle => 'You can change this later in Settings.';
+
+  @override
+  String get onboardingUnitKg => 'Kilograms';
+
+  @override
+  String get onboardingUnitLb => 'Pounds';
+
+  @override
+  String get onboardingDoneTitle => 'You\'re all set';
+
+  @override
+  String get onboardingDoneBody =>
+      'Browse the Routines tab for ready-made programs, or jump straight into a free workout from the Workouts tab.';
+
+  @override
+  String get onboardingTip =>
+      'Tip: log every set with RPE — the fatigue dashboard needs it.';
 }

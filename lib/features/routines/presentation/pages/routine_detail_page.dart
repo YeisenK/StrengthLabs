@@ -60,9 +60,16 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            title: Text(
-              routine.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            title: Hero(
+              tag: 'routine-${routine.id}',
+              child: Material(
+                type: MaterialType.transparency,
+                child: Text(
+                  routine.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: _RoutineHeader(routine: routine),
@@ -149,19 +156,19 @@ class _RoutineHeader extends StatelessWidget {
           Row(
             children: [
               _Badge(
-                label: routine.level.label,
+                label: routine.level.localized(AppLocalizations.of(context)!),
                 color: levelColor,
               ),
               const SizedBox(width: 8),
               _Badge(
-                label: routine.goal.label,
+                label: routine.goal.localized(AppLocalizations.of(context)!),
                 color: theme.colorScheme.primary,
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            '${routine.daysPerWeek} days/week  ·  ${routine.days.length} training days',
+            '${AppLocalizations.of(context)!.daysPerWeek(routine.daysPerWeek)}  ·  ${AppLocalizations.of(context)!.trainingDaysCount(routine.days.length)}',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -206,7 +213,7 @@ class _DayView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          '${day.exercises.length} exercises',
+          AppLocalizations.of(context)!.exercisesCount(day.exercises.length),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -269,7 +276,7 @@ class _ExerciseRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      routineExercise.exercise.muscleGroup.label,
+                      routineExercise.exercise.muscleGroup.localized(AppLocalizations.of(context)!),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

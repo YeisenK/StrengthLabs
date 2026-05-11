@@ -1,34 +1,38 @@
-class Validators {
-  Validators._();
+import 'package:strengthlabs/l10n/app_localizations.dart';
 
-  static String? email(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Email is required';
-    final re = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!re.hasMatch(value.trim())) return 'Enter a valid email';
+class FormValidators {
+  const FormValidators(this._l10n);
+  final AppLocalizations _l10n;
+
+  static final _emailRe = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+
+  String? email(String? value) {
+    if (value == null || value.trim().isEmpty) return _l10n.validatorEmailRequired;
+    if (!_emailRe.hasMatch(value.trim())) return _l10n.validatorEmailInvalid;
     return null;
   }
 
-  static String? password(String? value) {
-    if (value == null || value.isEmpty) return 'Password is required';
-    if (value.length < 6) return 'At least 6 characters required';
+  String? password(String? value) {
+    if (value == null || value.isEmpty) return _l10n.validatorPasswordRequired;
+    if (value.length < 6) return _l10n.validatorPasswordTooShort;
     return null;
   }
 
-  static String? confirmPassword(String? value, String original) {
-    if (value == null || value.isEmpty) return 'Please confirm your password';
-    if (value != original) return 'Passwords do not match';
+  String? confirmPassword(String? value, String original) {
+    if (value == null || value.isEmpty) return _l10n.validatorConfirmRequired;
+    if (value != original) return _l10n.validatorConfirmMismatch;
     return null;
   }
 
-  static String? required(String? value, String label) {
-    if (value == null || value.trim().isEmpty) return '$label is required';
+  String? required(String? value, String field) {
+    if (value == null || value.trim().isEmpty) return _l10n.validatorFieldRequired(field);
     return null;
   }
 
-  static String? positiveNumber(String? value, String label) {
-    if (value == null || value.trim().isEmpty) return null; // optional
+  String? positiveNumber(String? value, String field) {
+    if (value == null || value.trim().isEmpty) return null;
     final n = double.tryParse(value);
-    if (n == null || n <= 0) return 'Enter a valid $label';
+    if (n == null || n <= 0) return _l10n.validatorFieldInvalid(field);
     return null;
   }
 }

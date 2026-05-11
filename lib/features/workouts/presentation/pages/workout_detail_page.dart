@@ -352,7 +352,7 @@ class _ExerciseCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      workoutExercise.exercise.muscleGroup.label,
+                      workoutExercise.exercise.muscleGroup.localized(AppLocalizations.of(context)!),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w500,

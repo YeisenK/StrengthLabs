@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 
 enum MuscleGroup { chest, back, legs, shoulders, arms, core }
 
@@ -29,20 +30,20 @@ extension MuscleGroupParsing on MuscleGroup {
 }
 
 extension MuscleGroupLabel on MuscleGroup {
-  String get label {
+  String localized(AppLocalizations l10n) {
     switch (this) {
       case MuscleGroup.chest:
-        return 'Chest';
+        return l10n.muscleChest;
       case MuscleGroup.back:
-        return 'Back';
+        return l10n.muscleBack;
       case MuscleGroup.legs:
-        return 'Legs';
+        return l10n.muscleLegs;
       case MuscleGroup.shoulders:
-        return 'Shoulders';
+        return l10n.muscleShoulders;
       case MuscleGroup.arms:
-        return 'Arms';
+        return l10n.muscleArms;
       case MuscleGroup.core:
-        return 'Core';
+        return l10n.muscleCore;
     }
   }
 }

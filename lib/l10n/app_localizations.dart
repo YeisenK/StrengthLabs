@@ -614,6 +614,30 @@ abstract class AppLocalizations {
   /// **'Composite Risk'**
   String get compositeRisk;
 
+  /// No description provided for @glossaryAtlTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Acute Training Load — your fatigue from the last 7 days. High ATL means you have trained hard recently.'**
+  String get glossaryAtlTooltip;
+
+  /// No description provided for @glossaryCtlTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronic Training Load — your fitness level based on the last 42 days. A rising CTL indicates improving fitness.'**
+  String get glossaryCtlTooltip;
+
+  /// No description provided for @glossaryTsbTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Stress Balance — fitness (CTL) minus fatigue (ATL). Positive = fresh and ready; negative = accumulated fatigue.'**
+  String get glossaryTsbTooltip;
+
+  /// No description provided for @glossaryAcwrTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Acute:Chronic Workload Ratio — last week\'s load vs. your 4-week average. Safe range: 0.8–1.3. Above 1.5 raises injury risk.'**
+  String get glossaryAcwrTooltip;
+
   /// No description provided for @trainingPlan.
   ///
   /// In en, this message translates to:
@@ -841,6 +865,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create a routine to organize your training'**
   String get noRoutinesSubtitle;
+
+  /// No description provided for @loginWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get loginWelcomeTitle;
+
+  /// No description provided for @loginWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to continue your training journey'**
+  String get loginWelcomeSubtitle;
+
+  /// No description provided for @loginOrDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get loginOrDivider;
+
+  /// No description provided for @loginContinueGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get loginContinueGoogle;
+
+  /// No description provided for @registerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get registerTitle;
+
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking your strength journey'**
+  String get registerSubtitle;
+
+  /// No description provided for @validatorEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required'**
+  String get validatorEmailRequired;
+
+  /// No description provided for @validatorEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email'**
+  String get validatorEmailInvalid;
+
+  /// No description provided for @validatorPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get validatorPasswordRequired;
+
+  /// No description provided for @validatorPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 6 characters required'**
+  String get validatorPasswordTooShort;
+
+  /// No description provided for @validatorConfirmRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get validatorConfirmRequired;
+
+  /// No description provided for @validatorConfirmMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get validatorConfirmMismatch;
+
+  /// No description provided for @validatorFieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is required'**
+  String validatorFieldRequired(String field);
+
+  /// No description provided for @validatorFieldInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid {field}'**
+  String validatorFieldInvalid(String field);
+
+  /// No description provided for @levelBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get levelBeginner;
+
+  /// No description provided for @levelIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get levelIntermediate;
+
+  /// No description provided for @levelAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get levelAdvanced;
+
+  /// No description provided for @goalStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength'**
+  String get goalStrength;
+
+  /// No description provided for @goalHypertrophy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hypertrophy'**
+  String get goalHypertrophy;
+
+  /// No description provided for @goalEndurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Endurance'**
+  String get goalEndurance;
+
+  /// No description provided for @goalGeneralFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'General Fitness'**
+  String get goalGeneralFitness;
+
+  /// No description provided for @muscleChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get muscleChest;
+
+  /// No description provided for @muscleBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get muscleBack;
+
+  /// No description provided for @muscleLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'Legs'**
+  String get muscleLegs;
+
+  /// No description provided for @muscleShoulders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get muscleShoulders;
+
+  /// No description provided for @muscleArms.
+  ///
+  /// In en, this message translates to:
+  /// **'Arms'**
+  String get muscleArms;
+
+  /// No description provided for @muscleCore.
+  ///
+  /// In en, this message translates to:
+  /// **'Core'**
+  String get muscleCore;
+
+  /// No description provided for @daysPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days / week'**
+  String daysPerWeek(int count);
+
+  /// No description provided for @trainingDaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} training days'**
+  String trainingDaysCount(int count);
+
+  /// No description provided for @exercisesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} exercises'**
+  String exercisesCount(int count);
+
+  /// No description provided for @readinessLabelFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get readinessLabelFresh;
+
+  /// No description provided for @readinessLabelReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get readinessLabelReady;
+
+  /// No description provided for @readinessLabelModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get readinessLabelModerate;
+
+  /// No description provided for @readinessLabelFatigued.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigued'**
+  String get readinessLabelFatigued;
+
+  /// No description provided for @readinessLabelDepleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Depleted'**
+  String get readinessLabelDepleted;
+
+  /// No description provided for @riskLow.
+  ///
+  /// In en, this message translates to:
+  /// **'LOW'**
+  String get riskLow;
+
+  /// No description provided for @riskModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'MODERATE'**
+  String get riskModerate;
+
+  /// No description provided for @riskHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'HIGH'**
+  String get riskHigh;
+
+  /// No description provided for @riskCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'CRITICAL'**
+  String get riskCritical;
+
+  /// No description provided for @dayMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mo'**
+  String get dayMon;
+
+  /// No description provided for @dayTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tu'**
+  String get dayTue;
+
+  /// No description provided for @dayWed.
+  ///
+  /// In en, this message translates to:
+  /// **'We'**
+  String get dayWed;
+
+  /// No description provided for @dayThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Th'**
+  String get dayThu;
+
+  /// No description provided for @dayFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fr'**
+  String get dayFri;
+
+  /// No description provided for @daySat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sa'**
+  String get daySat;
+
+  /// No description provided for @daySun.
+  ///
+  /// In en, this message translates to:
+  /// **'Su'**
+  String get daySun;
+
+  /// No description provided for @targetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {sets} × {reps}'**
+  String targetLabel(int sets, String reps);
+
+  /// No description provided for @colHeaderWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'WEIGHT'**
+  String get colHeaderWeight;
+
+  /// No description provided for @colHeaderReps.
+  ///
+  /// In en, this message translates to:
+  /// **'REPS'**
+  String get colHeaderReps;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s start'**
+  String get onboardingStart;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to StrengthLabs'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your workouts. Monitor fatigue. Train smarter — with science-based metrics like ACWR, TSB and readiness score.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingUnitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your unit'**
+  String get onboardingUnitTitle;
+
+  /// No description provided for @onboardingUnitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later in Settings.'**
+  String get onboardingUnitSubtitle;
+
+  /// No description provided for @onboardingUnitKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilograms'**
+  String get onboardingUnitKg;
+
+  /// No description provided for @onboardingUnitLb.
+  ///
+  /// In en, this message translates to:
+  /// **'Pounds'**
+  String get onboardingUnitLb;
+
+  /// No description provided for @onboardingDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set'**
+  String get onboardingDoneTitle;
+
+  /// No description provided for @onboardingDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the Routines tab for ready-made programs, or jump straight into a free workout from the Workouts tab.'**
+  String get onboardingDoneBody;
+
+  /// No description provided for @onboardingTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: log every set with RPE — the fatigue dashboard needs it.'**
+  String get onboardingTip;
 }
 
 class _AppLocalizationsDelegate

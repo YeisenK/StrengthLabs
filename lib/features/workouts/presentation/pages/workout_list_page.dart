@@ -247,7 +247,7 @@ class _FilterBar extends StatelessWidget {
           ),
           ...MuscleGroup.values.map(
             (mg) => _Chip(
-              label: mg.label,
+              label: mg.localized(AppLocalizations.of(context)!),
               isSelected: selectedGroups.contains(mg),
               onTap: () => onGroupToggle(mg),
             ),
@@ -390,7 +390,7 @@ class _WorkoutCard extends StatelessWidget {
                     children: workout.exercises
                         .map((e) => e.exercise.muscleGroup)
                         .toSet()
-                        .map((mg) => _MuscleChip(label: mg.label))
+                        .map((mg) => _MuscleChip(label: mg.localized(AppLocalizations.of(context)!)))
                         .toList(),
                   ),
                 ],

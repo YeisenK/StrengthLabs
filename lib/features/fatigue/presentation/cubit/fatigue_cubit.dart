@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:strengthlabs/features/fatigue/data/fatigue_repository.dart';
 import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_state.dart';
+import 'package:strengthlabs/shared/utils/api_error.dart';
 
 class FatigueCubit extends Cubit<FatigueState> {
   FatigueCubit(this._repository) : super(const FatigueInitial());
@@ -13,7 +14,7 @@ class FatigueCubit extends Cubit<FatigueState> {
       final summary = await _repository.getSummary();
       emit(FatigueLoaded(summary));
     } catch (e) {
-      emit(FatigueError(e.toString()));
+      emit(FatigueError(mapApiError(e)));
     }
   }
 }

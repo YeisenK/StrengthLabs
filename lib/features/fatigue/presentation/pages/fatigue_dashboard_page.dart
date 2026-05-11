@@ -108,15 +108,16 @@ class _ReadinessCard extends StatelessWidget {
   const _ReadinessCard({required this.summary});
   final FatigueSummary summary;
 
-  String get _label {
+  String _label(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final s = summary.hasComputeData
         ? summary.readinessScore
         : summary.overallIndex;
-    if (s >= 80) return 'Fresh';
-    if (s >= 60) return 'Ready';
-    if (s >= 40) return 'Moderate';
-    if (s >= 20) return 'Fatigued';
-    return 'Depleted';
+    if (s >= 80) return l10n.readinessLabelFresh;
+    if (s >= 60) return l10n.readinessLabelReady;
+    if (s >= 40) return l10n.readinessLabelModerate;
+    if (s >= 20) return l10n.readinessLabelFatigued;
+    return l10n.readinessLabelDepleted;
   }
 
   String _subtitle(BuildContext context) {
@@ -188,7 +189,7 @@ class _ReadinessCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                _label,
+                _label(context),
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w600,
@@ -298,6 +299,7 @@ class _MetricsRow extends StatelessWidget {
             label: 'ATL',
             value: summary.atl.toStringAsFixed(1),
             subtitle: l10n.acuteLoad,
+            tooltip: l10n.glossaryAtlTooltip,
           ),
         ),
         const SizedBox(width: 8),
@@ -306,6 +308,7 @@ class _MetricsRow extends StatelessWidget {
             label: 'CTL',
             value: summary.ctl.toStringAsFixed(1),
             subtitle: l10n.chronicLoad,
+            tooltip: l10n.glossaryCtlTooltip,
           ),
         ),
         const SizedBox(width: 8),
@@ -315,6 +318,7 @@ class _MetricsRow extends StatelessWidget {
             value: '${summary.tsb >= 0 ? '+' : ''}${summary.tsb.toStringAsFixed(1)}',
             subtitle: l10n.balance,
             valueColor: summary.tsb >= 0 ? const Color(0xFF4CAF50) : const Color(0xFFEF5350),
+            tooltip: l10n.glossaryTsbTooltip,
           ),
         ),
         const SizedBox(width: 8),
@@ -324,6 +328,7 @@ class _MetricsRow extends StatelessWidget {
             value: summary.acwr.toStringAsFixed(2),
             subtitle: l10n.workloadRatio,
             valueColor: _acwrColor(summary.acwr),
+            tooltip: l10n.glossaryAcwrTooltip,
           ),
         ),
       ],
@@ -343,46 +348,80 @@ class _MetricTile extends StatelessWidget {
     required this.value,
     required this.subtitle,
     this.valueColor,
+    this.tooltip,
   });
 
   final String label;
   final String value;
   final String subtitle;
   final Color? valueColor;
+  final String? tooltip;
+
+  void _showTooltip(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(label),
+        content: Text(tooltip!),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 1,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: tooltip != null ? () => _showTooltip(context) : null,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  if (tooltip != null)
+                    Icon(
+                      Icons.info_outline,
+                      size: 12,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
+                ],
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: valueColor,
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: valueColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 10,
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -402,6 +441,17 @@ class _RiskCard extends StatelessWidget {
         'critical' => const Color(0xFFB71C1C),
         _ => const Color(0xFF607D8B),
       };
+
+  String _riskLabel(BuildContext context, String level) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (level) {
+      'low' => l10n.riskLow,
+      'moderate' => l10n.riskModerate,
+      'high' => l10n.riskHigh,
+      'critical' => l10n.riskCritical,
+      _ => level.toUpperCase(),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -432,7 +482,7 @@ class _RiskCard extends StatelessWidget {
                     border: Border.all(color: color.withValues(alpha: 0.4)),
                   ),
                   child: Text(
-                    summary.riskLevel.toUpperCase(),
+                    _riskLabel(context, summary.riskLevel),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: color,
                       fontWeight: FontWeight.bold,
@@ -677,7 +727,7 @@ class _WeeklyTrendCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: points
                   .map((p) => Text(
-                        _dayLabel(p.date),
+                        _dayLabel(context, p.date),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -690,8 +740,9 @@ class _WeeklyTrendCard extends StatelessWidget {
     );
   }
 
-  String _dayLabel(DateTime d) {
-    const days = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  String _dayLabel(BuildContext context, DateTime d) {
+    final l10n = AppLocalizations.of(context)!;
+    final days = [l10n.dayMon, l10n.dayTue, l10n.dayWed, l10n.dayThu, l10n.dayFri, l10n.daySat, l10n.daySun];
     return days[d.weekday - 1];
   }
 }
@@ -754,7 +805,7 @@ class _MuscleBar extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  muscleGroup.label,
+                  muscleGroup.localized(AppLocalizations.of(context)!),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),

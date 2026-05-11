@@ -125,7 +125,7 @@ class _LevelFilterRow extends StatelessWidget {
           ),
           ...RoutineLevel.values.map(
             (l) => _Chip(
-              label: l.label,
+              label: l.localized(AppLocalizations.of(context)!),
               isSelected: selected == l,
               onTap: () => onChanged(selected == l ? null : l),
             ),
@@ -219,7 +219,7 @@ class _RoutineCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        routine.level.label,
+                        routine.level.localized(AppLocalizations.of(context)!),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: levelColor,
                           fontWeight: FontWeight.w600,
@@ -235,7 +235,7 @@ class _RoutineCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        routine.goal.label,
+                        routine.goal.localized(AppLocalizations.of(context)!),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -249,10 +249,16 @@ class _RoutineCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  routine.name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Hero(
+                  tag: 'routine-${routine.id}',
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Text(
+                      routine.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -275,7 +281,7 @@ class _RoutineCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${routine.daysPerWeek} days / week',
+                      AppLocalizations.of(context)!.daysPerWeek(routine.daysPerWeek),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -288,7 +294,7 @@ class _RoutineCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${routine.days.length} training days',
+                      AppLocalizations.of(context)!.trainingDaysCount(routine.days.length),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

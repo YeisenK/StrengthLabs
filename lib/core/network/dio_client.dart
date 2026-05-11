@@ -21,6 +21,9 @@ class DioClient {
   final TokenStorage _tokenStorage;
   late final Dio _dio;
 
+  // Updated by SettingsCubit whenever the locale changes.
+  static String languageCode = 'en';
+
   Dio get dio => _dio;
 }
 
@@ -57,6 +60,7 @@ class _AuthInterceptor extends Interceptor {
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
+    options.headers['Accept-Language'] = DioClient.languageCode;
     handler.next(options);
   }
 
