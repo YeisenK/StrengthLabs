@@ -294,7 +294,7 @@ class _RoutineCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      AppLocalizations.of(context)!.trainingDaysCount(routine.days.length),
+                      AppLocalizations.of(context)!.trainingDaysCount(routine.daysPerWeek),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
