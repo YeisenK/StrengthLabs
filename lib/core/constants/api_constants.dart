@@ -1,12 +1,14 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Backend base URL. Override at build/run time:
-  //   flutter run --dart-define=API_BASE_URL=http://192.168.1.X:8000
-  // Default targets the Android emulator loopback to the host machine.
+  // Backend base URL. Points at the deployed Cloudflare-fronted server by
+  // default so a fresh `flutter run` on a physical device just works.
+  // Override for local development:
+  //   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080   (emulator)
+  //   flutter run --dart-define=API_BASE_URL=http://192.168.1.X:8080 (LAN)
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://api.blocsa.com',
   );
 
 

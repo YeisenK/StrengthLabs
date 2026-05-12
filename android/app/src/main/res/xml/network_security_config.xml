@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allow plaintext HTTP for local development and self-hosted deployments.
+  The backend is reached over plain HTTP because the academic/portfolio
+  deployments do not terminate TLS in front. When you put the API behind
+  HTTPS, this file can shrink to the default (TLS-only) policy.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

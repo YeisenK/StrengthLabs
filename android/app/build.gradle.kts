@@ -6,7 +6,16 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+}
+
+// Google Services plugin runs only when a real google-services.json is
+// dropped in `android/app/`. Without the file the plugin task fails the
+// build at configuration time, even for plain debug runs that never touch
+// Google Sign-In. Local dev should be unaffected by its absence; sign-in
+// just won't work until the file lands.
+val googleServicesFile = file("google-services.json")
+if (googleServicesFile.exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 val keyPropertiesFile = rootProject.file("key.properties")
@@ -37,18 +46,30 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release") {
-            keyAlias = keyProperties["keyAlias"] as String
-            keyPassword = keyProperties["keyPassword"] as String
-            storeFile = keyProperties["storeFile"]?.let { file(it) }
-            storePassword = keyProperties["storePassword"] as String
+    // Release signing is only wired up when key.properties is actually present
+    // (i.e. on a release-build machine). Casting nulls to String would blow up
+    // even on a plain `flutter run --debug`, so we gate the block instead.
+    if (keyPropertiesFile.exists()) {
+        signingConfigs {
+            create("release") {
+                keyAlias = keyProperties["keyAlias"] as String
+                keyPassword = keyProperties["keyPassword"] as String
+                storeFile = (keyProperties["storeFile"] as? String)?.let { file(it) }
+                storePassword = keyProperties["storePassword"] as String
+            }
         }
-    }
-
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("release")
+        buildTypes {
+            release {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    } else {
+        // Without a release key, fall back to debug signing so `flutter build
+        // apk --release` still produces an installable artifact for local QA.
+        buildTypes {
+            release {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }
