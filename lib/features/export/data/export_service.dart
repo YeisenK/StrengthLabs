@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:excel/excel.dart';
@@ -40,17 +41,19 @@ class ExportService {
     final buffer = StringBuffer();
 
     // Header
-    buffer.writeln(_headers.join(','));
+    buffer.write(_headers.join(','));
+    buffer.write('\r\n');
 
-    // Data rows
+    // Data rows (\r\n line endings — required for Excel on Windows/Android viewers)
     for (final row in rows) {
-      buffer.writeln(row.map(_escapeCsvField).join(','));
+      buffer.write(row.map(_escapeCsvField).join(','));
+      buffer.write('\r\n');
     }
 
-    final file = await _writeFile(
-      'strengthlabs_export.csv',
-      buffer.toString().codeUnits,
-    );
+    // UTF-8 BOM so Excel/Sheets autodetect the encoding instead of falling
+    // back to system codepage and showing mojibake for tildes/ñ.
+    final bytes = <int>[0xEF, 0xBB, 0xBF, ...utf8.encode(buffer.toString())];
+    final file = await _writeFile('strengthlabs_export.csv', bytes);
     final shared = await _maybeShare(file, 'text/csv');
     return ExportResult(rowCount: rows.length, path: file.path, shared: shared);
   }
@@ -61,8 +64,15 @@ class ExportService {
     final rows = _buildRows(workouts, l10n);
     final excel = Excel.createExcel();
 
-    // Remove the default empty sheet
-    excel.delete('Sheet1');
+    // Rename the auto-created default sheet instead of deleting it. Deleting
+    // 'Sheet1' before saving leaves `defaultSheet` pointing at a non-existent
+    // tab — many Android viewers (Google Sheets, WPS) open the workbook on
+    // the missing tab and show a blank document.
+    final defaultName = excel.getDefaultSheet();
+    if (defaultName != null && defaultName != 'Workouts') {
+      excel.rename(defaultName, 'Workouts');
+    }
+    excel.setDefaultSheet('Workouts');
 
     final sheet = excel['Workouts'];
 

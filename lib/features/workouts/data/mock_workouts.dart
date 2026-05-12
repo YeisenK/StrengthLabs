@@ -2,15 +2,19 @@ import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
 
-// Global exercise catalog — also used by routines and the exercise picker
+// Global exercise catalog — also used by routines and the exercise picker.
+// Names match the backend `exercises` seed so that when a workout started
+// from a frontend routine gets finished, the active-workout cubit can
+// reconcile each entry against the real catalog by name and submit a real
+// UUID to POST /workouts (otherwise the save would 400 on unknown ids).
 const List<Exercise> kExerciseCatalog = [
-  Exercise(id: 'e1', name: 'Bench Press', muscleGroup: MuscleGroup.chest),
+  Exercise(id: 'e1', name: 'Barbell Bench Press', muscleGroup: MuscleGroup.chest),
   Exercise(id: 'e2', name: 'Incline Dumbbell Press', muscleGroup: MuscleGroup.chest),
   Exercise(id: 'e3', name: 'Cable Fly', muscleGroup: MuscleGroup.chest),
-  Exercise(id: 'e4', name: 'Barbell Squat', muscleGroup: MuscleGroup.legs),
+  Exercise(id: 'e4', name: 'Barbell Back Squat', muscleGroup: MuscleGroup.legs),
   Exercise(id: 'e5', name: 'Romanian Deadlift', muscleGroup: MuscleGroup.legs),
   Exercise(id: 'e6', name: 'Leg Press', muscleGroup: MuscleGroup.legs),
-  Exercise(id: 'e7', name: 'Deadlift', muscleGroup: MuscleGroup.back),
+  Exercise(id: 'e7', name: 'Barbell Deadlift', muscleGroup: MuscleGroup.back),
   Exercise(id: 'e8', name: 'Pull-up', muscleGroup: MuscleGroup.back),
   Exercise(id: 'e9', name: 'Seated Cable Row', muscleGroup: MuscleGroup.back),
   Exercise(id: 'e10', name: 'Overhead Press', muscleGroup: MuscleGroup.shoulders),
@@ -18,7 +22,7 @@ const List<Exercise> kExerciseCatalog = [
   Exercise(id: 'e12', name: 'Face Pull', muscleGroup: MuscleGroup.shoulders),
   Exercise(id: 'e13', name: 'Tricep Pushdown', muscleGroup: MuscleGroup.triceps),
   Exercise(id: 'e14', name: 'Skull Crusher', muscleGroup: MuscleGroup.triceps),
-  Exercise(id: 'e15', name: 'Bicep Curl', muscleGroup: MuscleGroup.biceps),
+  Exercise(id: 'e15', name: 'Barbell Curl', muscleGroup: MuscleGroup.biceps),
   Exercise(id: 'e16', name: 'Hammer Curl', muscleGroup: MuscleGroup.biceps),
   Exercise(id: 'e17', name: 'Plank', muscleGroup: MuscleGroup.core),
   Exercise(id: 'e18', name: 'Ab Wheel Rollout', muscleGroup: MuscleGroup.core),

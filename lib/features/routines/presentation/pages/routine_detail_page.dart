@@ -5,6 +5,7 @@ import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
 import 'package:strengthlabs/l10n/app_localizations.dart';
 import 'package:strengthlabs/shared/widgets/app_button.dart';
 import 'package:strengthlabs/shared/widgets/loading_widget.dart';
@@ -48,6 +49,39 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _startRoutine(Routine routine) {
+    if (routine.days.isEmpty) return;
+    final dayIndex = _tabController.index.clamp(0, routine.days.length - 1);
+    final day = routine.days[dayIndex];
+
+    // The backend serialises routine exercises with synthetic ids like
+    // "ex-barbell-bench-press" that aren't in the `exercises` table. Mock
+    // routines reference mock-only ids for the same reason. Either way,
+    // posting the resulting workout would 400 on /workouts. Resolve to a
+    // real catalogue exercise by name so finish-workout actually persists.
+    final catalog = context.read<WorkoutsCubit>().exercises;
+    final entries = day.exercises.map((re) {
+      final match = catalog.cast<Exercise?>().firstWhere(
+            (e) => e!.name.toLowerCase() == re.exercise.name.toLowerCase(),
+            orElse: () => null,
+          ) ??
+          re.exercise;
+      return TemplateEntry(
+        exercise: match,
+        sets: re.sets,
+        targetReps: re.repsScheme,
+      );
+    }).toList();
+
+    context.push(
+      '/active-workout',
+      extra: ActiveWorkoutTemplate(
+        name: '${routine.name} — ${day.name}',
+        entries: entries,
+      ),
+    );
   }
 
   @override
@@ -108,20 +142,7 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
           child: AppButton(
             label: AppLocalizations.of(context)!.startThisRoutine,
             icon: Icons.play_arrow_rounded,
-            onPressed: () {
-              final day = routine.days[_tabController.index];
-              final template = ActiveWorkoutTemplate(
-                name: '${routine.name} — ${day.name}',
-                entries: day.exercises
-                    .map((re) => TemplateEntry(
-                          exercise: re.exercise,
-                          sets: re.sets,
-                          targetReps: re.repsScheme,
-                        ))
-                    .toList(),
-              );
-              context.push('/active-workout', extra: template);
-            },
+            onPressed: routine.days.isEmpty ? null : () => _startRoutine(routine),
           ),
         ),
       ),

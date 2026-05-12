@@ -656,100 +656,99 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
+    // 75% of the screen is a good Material default for content-rich sheets;
+    // subtracting the keyboard inset lets the list shrink instead of pushing
+    // the bottom rows off-screen when the search field is focused.
+    final sheetHeight =
+        MediaQuery.sizeOf(context).height * 0.75 - viewInsetsBottom;
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              AppLocalizations.of(context)!.addExerciseTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Search
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context)!.searchExercises,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                isDense: true,
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+      padding: EdgeInsets.only(bottom: viewInsetsBottom),
+      child: SizedBox(
+        height: sheetHeight > 0 ? sheetHeight : 0,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                AppLocalizations.of(context)!.addExerciseTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              onChanged: (v) => setState(() => _query = v),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Muscle group filter chips
-          SizedBox(
-            height: 36,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                _FilterChip(
-                  label: AppLocalizations.of(context)!.all,
-                  isSelected: _selectedGroup == null,
-                  onTap: () => setState(() => _selectedGroup = null),
+            const SizedBox(height: 12),
+            // Search
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _searchCtrl,
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.searchExercises,
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  isDense: true,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-                ...MuscleGroup.values.map(
-                  (mg) => _FilterChip(
-                    label: mg.localized(AppLocalizations.of(context)!),
-                    isSelected: _selectedGroup == mg,
-                    onTap: () => setState(
-                      () => _selectedGroup =
-                          _selectedGroup == mg ? null : mg,
+                onChanged: (v) => setState(() => _query = v),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Muscle group filter chips
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  _FilterChip(
+                    label: AppLocalizations.of(context)!.all,
+                    isSelected: _selectedGroup == null,
+                    onTap: () => setState(() => _selectedGroup = null),
+                  ),
+                  ...MuscleGroup.values.map(
+                    (mg) => _FilterChip(
+                      label: mg.localized(AppLocalizations.of(context)!),
+                      isSelected: _selectedGroup == mg,
+                      onTap: () => setState(
+                        () => _selectedGroup =
+                            _selectedGroup == mg ? null : mg,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Exercise list
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+            const SizedBox(height: 8),
+            // Exercise list — Expanded so it absorbs the remaining space and
+            // shrinks when the keyboard appears, instead of overflowing.
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filtered.length,
+                itemBuilder: (context, i) {
+                  final ex = _filtered[i];
+                  return ListTile(
+                    title: Text(ex.name),
+                    subtitle: Text(
+                        ex.muscleGroup.localized(AppLocalizations.of(context)!)),
+                    trailing: const Icon(Icons.add_circle_outline),
+                    onTap: () => widget.onPick(ex),
+                  );
+                },
+              ),
             ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _filtered.length,
-              itemBuilder: (context, i) {
-                final ex = _filtered[i];
-                return ListTile(
-                  title: Text(ex.name),
-                  subtitle: Text(ex.muscleGroup.localized(AppLocalizations.of(context)!)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add_circle_outline),
-                    ],
-                  ),
-                  onTap: () => widget.onPick(ex),
-                );
-              },
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: Text(AppLocalizations.of(context)!.createCustomExercise),
+              onTap: () => _showCreateDialog(context),
             ),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.add),
-            title: Text(AppLocalizations.of(context)!.createCustomExercise),
-            onTap: () => _showCreateDialog(context),
-          ),
-          const SizedBox(height: 8),
-        ],
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

@@ -47,7 +47,7 @@ class _AppState extends State<App> {
     _settingsCubit = SettingsCubit();
     _workoutRepo = WorkoutRepository(_dioClient);
     _fatigueRepo = FatigueRepository(_dioClient);
-    _routineRepo = RoutineRepository(_dioClient);
+    _routineRepo = const RoutineRepository();
 
     _router = AppRouter.createRouter(_authCubit);
 
