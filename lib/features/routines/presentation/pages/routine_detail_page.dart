@@ -19,7 +19,7 @@ class RoutineDetailPage extends StatefulWidget {
 }
 
 class _RoutineDetailPageState extends State<RoutineDetailPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   Routine? _routine;
 
@@ -36,13 +36,20 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
 
   Future<void> _loadDetail() async {
     final detail = await context.read<RoutinesCubit>().fetchDetail(widget.id);
-    if (detail != null && mounted) {
-      _tabController.dispose();
-      setState(() {
-        _routine = detail;
-        _tabController = TabController(length: detail.days.length, vsync: this);
-      });
-    }
+    if (detail == null || !mounted) return;
+    // Only swap the TabController when the tab count actually changes —
+    // disposing+recreating it on every load allocates a new Ticker, and
+    // with SingleTickerProviderStateMixin this throws. TickerProviderState
+    // would allow it, but skipping the recreate is also cheaper.
+    final needsRebuild = detail.days.length != _tabController.length;
+    if (needsRebuild) _tabController.dispose();
+    setState(() {
+      _routine = detail;
+      if (needsRebuild) {
+        _tabController =
+            TabController(length: detail.days.length, vsync: this);
+      }
+    });
   }
 
   @override
