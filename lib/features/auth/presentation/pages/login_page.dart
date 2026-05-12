@@ -127,12 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                       const SizedBox(height: 24),
-                      _OrDivider(),
-                      const SizedBox(height: 16),
-                      _GoogleSignInButton(
-                        onTap: () => context.read<AuthCubit>().loginWithGoogle(),
-                      ),
-                      const SizedBox(height: 24),
                       Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

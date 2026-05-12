@@ -218,25 +218,34 @@ class _SegmentTile<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final segmentedButton = SegmentedButton<T>(
+      segments: options
+          .map((o) => ButtonSegment<T>(value: o.$1, label: Text(o.$2)))
+          .toList(),
+      selected: {value},
+      onSelectionChanged: (s) => onChanged(s.first),
+      style: SegmentedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        textStyle: theme.textTheme.labelSmall,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
         children: [
-          Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 16),
-          Text(label, style: theme.textTheme.bodyLarge),
-          const Spacer(),
-          SegmentedButton<T>(
-            segments: options
-                .map((o) => ButtonSegment<T>(value: o.$1, label: Text(o.$2)))
-                .toList(),
-            selected: {value},
-            onSelectionChanged: (s) => onChanged(s.first),
-            style: SegmentedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              textStyle: theme.textTheme.labelSmall,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 16),
+              Text(label, style: theme.textTheme.bodyLarge),
+            ],
           ),
+          segmentedButton,
         ],
       ),
     );
