@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:strengthlabs/core/constants/api_constants.dart';
+import 'package:strengthlabs/core/network/correlation_id_interceptor.dart';
+import 'package:strengthlabs/core/network/retry_interceptor.dart';
 import 'package:strengthlabs/core/storage/token_storage.dart';
 
 class DioClient {
@@ -15,7 +17,12 @@ class DioClient {
         headers: {'Content-Type': 'application/json'},
       ),
     );
+    // Order matters: correlation id first so the retry path keeps the same
+    // id, then auth (token refresh), then retry (after auth has had a chance
+    // to refresh + replay 401s).
+    _dio.interceptors.add(CorrelationIdInterceptor());
     _dio.interceptors.add(_AuthInterceptor(_tokenStorage));
+    _dio.interceptors.add(RetryInterceptor(dio: _dio));
   }
 
   final TokenStorage _tokenStorage;

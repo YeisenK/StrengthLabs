@@ -4,15 +4,24 @@ import 'package:strengthlabs/core/constants/api_constants.dart';
 import 'package:strengthlabs/core/demo/demo_mode.dart';
 import 'package:strengthlabs/core/network/dio_client.dart';
 import 'package:strengthlabs/core/storage/token_storage.dart';
+import 'package:strengthlabs/features/auth/data/session_restore_result.dart';
+import 'package:strengthlabs/features/auth/data/user_cache.dart';
 import 'package:strengthlabs/features/auth/domain/entities/user.dart';
 
 class AuthRepository {
-  AuthRepository(this._dioClient, this._tokenStorage);
+  AuthRepository(
+    this._dioClient,
+    this._tokenStorage, {
+    UserCache? userCache,
+    GoogleSignIn? googleSignIn,
+  })  : _userCache = userCache ?? UserCache(),
+        _googleSignIn =
+            googleSignIn ?? GoogleSignIn(scopes: const ['email', 'profile']);
 
   final DioClient _dioClient;
   final TokenStorage _tokenStorage;
-
-  final _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  final UserCache _userCache;
+  final GoogleSignIn _googleSignIn;
 
   Future<User> login({
     required String email,
@@ -28,7 +37,9 @@ class AuthRepository {
         data: {'email': email, 'password': password},
       );
       await _saveTokens(response.data);
-      return await getCurrentUser();
+      final user = await getCurrentUser();
+      await _userCache.save(user);
+      return user;
     } on DioException catch (e) {
       throw Exception(_mapError(e));
     }
@@ -45,7 +56,9 @@ class AuthRepository {
         data: {'name': name, 'email': email, 'password': password},
       );
       await _saveTokens(response.data);
-      return await getCurrentUser();
+      final user = await getCurrentUser();
+      await _userCache.save(user);
+      return user;
     } on DioException catch (e) {
       throw Exception(_mapError(e));
     }
@@ -54,15 +67,48 @@ class AuthRepository {
   Future<User> getCurrentUser() async {
     if (DemoMode.isActive) return DemoMode.user;
     try {
-      final response = await _dioClient.dio.get('/auth/me');
-      final data = response.data as Map<String, dynamic>;
-      return User(
-        id: data['id'] as String,
-        name: data['name'] as String,
-        email: data['email'] as String,
-      );
+      return await _fetchMe();
     } on DioException catch (e) {
       throw Exception(_mapError(e));
+    }
+  }
+
+  /// Raw `/auth/me` fetch — propagates [DioException] so callers (e.g.
+  /// [restoreSession]) can branch on status codes.
+  Future<User> _fetchMe() async {
+    final response = await _dioClient.dio.get('/auth/me');
+    final data = response.data as Map<String, dynamic>;
+    return User(
+      id: data['id'] as String,
+      name: data['name'] as String,
+      email: data['email'] as String,
+    );
+  }
+
+  /// Restore a session on app start, tolerating a flaky network.
+  ///
+  /// Decision tree:
+  /// - No token on disk → [SessionMissing].
+  /// - `/auth/me` succeeds → cache + [SessionRestored].
+  /// - `/auth/me` returns 401 → clear tokens + [SessionExpired].
+  /// - Network error & cached user → [SessionRestored] with `fromCache: true`.
+  /// - Network error & no cache → [SessionOfflineNoCache].
+  Future<SessionRestoreResult> restoreSession() async {
+    if (DemoMode.isActive) return const SessionRestored(DemoMode.user);
+    if (!await _tokenStorage.hasTokens()) return const SessionMissing();
+    try {
+      final user = await _fetchMe();
+      await _userCache.save(user);
+      return SessionRestored(user);
+    } on DioException catch (e) {
+      if (_isAuthFailure(e)) {
+        await _tokenStorage.clearTokens();
+        await _userCache.clear();
+        return const SessionExpired();
+      }
+      final cached = await _userCache.read();
+      if (cached != null) return SessionRestored(cached, fromCache: true);
+      return const SessionOfflineNoCache();
     }
   }
 
@@ -72,23 +118,22 @@ class AuthRepository {
   }
 
   Future<User> loginWithGoogle() async {
-    // 1. Native Google Sign-In dialog
     final account = await _googleSignIn.signIn();
     if (account == null) throw Exception('Google Sign-In cancelled');
 
-    // 2. Obtain the raw ID token
     final auth = await account.authentication;
     final idToken = auth.idToken;
     if (idToken == null) throw Exception('Could not retrieve Google ID token');
 
-    // 3. Exchange the ID token for our own JWT pair
     try {
       final response = await _dioClient.dio.post(
         ApiConstants.authGoogle,
         data: {'id_token': idToken},
       );
       await _saveTokens(response.data as Map<String, dynamic>);
-      return await getCurrentUser();
+      final user = await getCurrentUser();
+      await _userCache.save(user);
+      return user;
     } on DioException catch (e) {
       throw Exception(_mapError(e));
     }
@@ -108,6 +153,7 @@ class AuthRepository {
       // on the next successful logout or just expire naturally.
     }
     await _tokenStorage.clearTokens();
+    await _userCache.clear();
     try {
       await _googleSignIn.signOut();
     } catch (_) {
@@ -120,6 +166,11 @@ class AuthRepository {
       accessToken: data['access_token'] as String,
       refreshToken: data['refresh_token'] as String,
     );
+  }
+
+  bool _isAuthFailure(DioException e) {
+    final status = e.response?.statusCode;
+    return status == 401 || status == 403;
   }
 
   String _mapError(DioException e) {

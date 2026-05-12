@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:strengthlabs/features/auth/data/auth_repository.dart';
+import 'package:strengthlabs/features/auth/data/session_restore_result.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -8,23 +9,18 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _repository;
 
   /// Called on app start to restore an existing session.
+  ///
+  /// Tolerates a flaky network: if the device is offline but we have a
+  /// cached user, the app stays logged in instead of bouncing to login.
   Future<void> checkAuthStatus() async {
-    final hasToken = await _repository.hasStoredTokens();
-    if (!hasToken) {
-      emit(const AuthUnauthenticated());
-      return;
-    }
-    try {
-      final user = await _repository.getCurrentUser();
-      emit(AuthAuthenticated(user));
-    } catch (_) {
-      // If session restoration fails for any reason, clear tokens and go to
-      // login silently — showing an error on startup before the user has
-      // done anything is confusing.
-      try {
-        await _repository.logout();
-      } catch (_) {}
-      emit(const AuthUnauthenticated());
+    final result = await _repository.restoreSession();
+    switch (result) {
+      case SessionRestored(:final user):
+        emit(AuthAuthenticated(user));
+      case SessionMissing():
+      case SessionExpired():
+      case SessionOfflineNoCache():
+        emit(const AuthUnauthenticated());
     }
   }
 
@@ -63,7 +59,6 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthAuthenticated(user));
     } catch (e) {
       final message = e.toString().replaceFirst('Exception: ', '');
-      // Cancelled sign-in is not an error worth surfacing
       if (message == 'Google Sign-In cancelled') {
         emit(const AuthUnauthenticated());
       } else {

@@ -13,6 +13,10 @@ class WorkoutSet extends Equatable {
   final double weight;
   final int reps;
   final double? rpe;
+
+  /// Local-only flag for in-progress sessions. The backend has no concept of
+  /// incomplete sets — completed sets are persisted, the rest never leave the
+  /// device.
   final bool isCompleted;
 
   double get volume => weight * reps;
@@ -22,7 +26,6 @@ class WorkoutSet extends Equatable {
         'weight': weight,
         'reps': reps,
         'rpe': rpe,
-        'isCompleted': isCompleted,
       };
 
   factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
@@ -30,7 +33,7 @@ class WorkoutSet extends Equatable {
         weight: (json['weight'] as num).toDouble(),
         reps: json['reps'] as int,
         rpe: json['rpe'] != null ? (json['rpe'] as num).toDouble() : null,
-        isCompleted: json['isCompleted'] as bool? ?? true,
+        isCompleted: true,
       );
 
   @override

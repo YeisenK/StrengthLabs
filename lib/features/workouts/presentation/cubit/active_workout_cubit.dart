@@ -1,13 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:strengthlabs/features/workouts/data/active_workout_draft_store.dart';
 import 'package:strengthlabs/features/workouts/data/workout_repository.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
 import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
 import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_state.dart';
 
-/// A single exercise slot within a template pre-populated from a routine:
-/// an exercise, the recommended number of empty sets, and an optional
-/// rep scheme hint (e.g. "5", "8-12", "5/3/1+") shown in the UI.
+/// A single exercise slot within a template pre-populated from a routine.
 class TemplateEntry {
   const TemplateEntry({
     required this.exercise,
@@ -20,7 +19,6 @@ class TemplateEntry {
   final String? targetReps;
 }
 
-/// Seed data for a new active workout, usually sourced from a routine day.
 class ActiveWorkoutTemplate {
   const ActiveWorkoutTemplate({required this.name, required this.entries});
 
@@ -29,22 +27,66 @@ class ActiveWorkoutTemplate {
 }
 
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
-  ActiveWorkoutCubit(this._repository)
-      : super(ActiveWorkoutState(
+  ActiveWorkoutCubit(
+    this._repository, {
+    ActiveWorkoutDraftStore? draftStore,
+  })  : _draftStore = draftStore ?? ActiveWorkoutDraftStore(),
+        super(ActiveWorkoutState(
           name: 'Workout',
           startTime: DateTime.now(),
           exercises: const [],
         ));
 
   final WorkoutRepository _repository;
+  final ActiveWorkoutDraftStore _draftStore;
+
+  /// Serialised write chain — ensures rapid successive mutations persist in
+  /// the order they happened. Without this, two near-simultaneous emits race
+  /// and the older state can overwrite the newer one.
+  Future<void> _saveQueue = Future<void>.value();
 
   int _idCounter = 0;
   String _nextId() => '${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
 
+  @override
+  void emit(ActiveWorkoutState state) {
+    super.emit(state);
+    if (!state.isFinished &&
+        ActiveWorkoutDraftStore.hasMeaningfulContent(state)) {
+      _saveQueue = _saveQueue.then((_) => _draftStore.save(state));
+    }
+  }
+
+  /// Flush any pending persistence — useful for tests and for moments when we
+  /// want to guarantee disk consistency (e.g. before navigation away).
+  Future<void> flushDraft() => _saveQueue;
+
+  /// Hydrate from a previously-persisted draft. Returns true if a draft was
+  /// found and applied (caller can then prompt the user to keep/discard).
+  Future<bool> restoreDraft() async {
+    final draft = await _draftStore.read();
+    if (draft == null) return false;
+    if (!ActiveWorkoutDraftStore.hasMeaningfulContent(draft)) {
+      await _draftStore.clear();
+      return false;
+    }
+    super.emit(draft);
+    return true;
+  }
+
+  /// Drop any persisted draft and reset to an empty session. Used when the
+  /// user explicitly chooses not to resume the previous draft.
+  Future<void> discardDraft() async {
+    await _draftStore.clear();
+    super.emit(ActiveWorkoutState(
+      name: 'Workout',
+      startTime: DateTime.now(),
+      exercises: const [],
+    ));
+  }
+
   void setName(String name) => emit(state.copyWith(name: name));
 
-  /// Replaces the current workout state with exercises pre-populated from
-  /// a routine template. Each entry gets `sets` empty [ActiveSet] rows.
   void loadTemplate(ActiveWorkoutTemplate template) {
     final exercises = template.entries.map((e) {
       final setCount = e.sets.clamp(1, 20);
@@ -67,9 +109,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       sets: [ActiveSet(id: newSetId)],
     );
     emit(state.copyWith(exercises: [...state.exercises, newExercise]));
-
-    // Best-effort prefetch of the user's last set for this exercise.
-    // Failures are silent — the user just sees empty fields, no error.
     _prefillLastSet(exercise.id, newExerciseId, newSetId);
   }
 
@@ -79,14 +118,16 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       final last = await _repository.getLastSet(exerciseCatalogId);
       if (last == null) return;
 
-      // Stale-check: the set may have been edited, removed or completed
-      // before the network round-trip finished. Only prefill if it's
-      // still empty.
       final exercise = state.exercises.firstWhere(
         (e) => e.id == activeExerciseId,
-        orElse: () => ActiveExercise(id: '', exercise: const Exercise(
-          id: '', name: '', muscleGroup: MuscleGroup.core,
-        ), sets: const []),
+        orElse: () => ActiveExercise(
+            id: '',
+            exercise: const Exercise(
+              id: '',
+              name: '',
+              muscleGroup: MuscleGroup.core,
+            ),
+            sets: const []),
       );
       if (exercise.id.isEmpty) return;
       final set = exercise.sets.firstWhere(
@@ -128,7 +169,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       exercises: state.exercises.map((e) {
         if (e.id != exerciseId) return e;
         final updated = e.sets.where((s) => s.id != setId).toList();
-        return e.copyWith(sets: updated.isEmpty ? [ActiveSet(id: _nextId())] : updated);
+        return e.copyWith(
+            sets: updated.isEmpty ? [ActiveSet(id: _nextId())] : updated);
       }).toList(),
     ));
   }
@@ -159,7 +201,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     ));
   }
 
-  /// Converts the active workout into a [Workout] entity and marks as finished.
   Workout finish() {
     final now = DateTime.now();
     final workoutExercises = state.exercises.map((ae) {
@@ -175,7 +216,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       return WorkoutExercise(exercise: ae.exercise, sets: validSets);
     }).where((we) => we.sets.isNotEmpty).toList();
 
-    emit(state.copyWith(isFinished: true));
+    final finished = state.copyWith(isFinished: true);
+    super.emit(finished);
+    // No need to keep the draft after a successful finish.
+    _draftStore.clear();
 
     return Workout(
       id: _nextId(),

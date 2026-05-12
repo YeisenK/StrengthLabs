@@ -38,6 +38,7 @@ class Workout extends Equatable {
     required this.duration,
     required this.exercises,
     this.notes,
+    this.clientRequestId,
   });
 
   final String id;
@@ -47,29 +48,60 @@ class Workout extends Equatable {
   final List<WorkoutExercise> exercises;
   final String? notes;
 
+  /// Client-generated UUID for idempotent retries. Sent on POST so the server
+  /// can deduplicate when the same request is retried after a timeout.
+  final String? clientRequestId;
+
   double get totalVolume => exercises.fold(0, (sum, e) => sum + e.totalVolume);
   int get totalSets => exercises.fold(0, (sum, e) => sum + e.sets.length);
+
+  Workout copyWith({
+    String? id,
+    String? name,
+    DateTime? date,
+    Duration? duration,
+    List<WorkoutExercise>? exercises,
+    String? notes,
+    String? clientRequestId,
+  }) =>
+      Workout(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        date: date ?? this.date,
+        duration: duration ?? this.duration,
+        exercises: exercises ?? this.exercises,
+        notes: notes ?? this.notes,
+        clientRequestId: clientRequestId ?? this.clientRequestId,
+      );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
-        'date': date.toIso8601String(),
-        'durationSeconds': duration.inSeconds,
+        'date': date.toUtc().toIso8601String(),
+        'duration_seconds': duration.inSeconds,
         'exercises': exercises.map((e) => e.toJson()).toList(),
         'notes': notes,
+        if (clientRequestId != null) 'client_request_id': clientRequestId,
       };
 
-  factory Workout.fromJson(Map<String, dynamic> json) => Workout(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        date: DateTime.parse(json['date'] as String),
-        duration: Duration(seconds: json['durationSeconds'] as int),
-        exercises: (json['exercises'] as List)
-            .map((e) => WorkoutExercise.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        notes: json['notes'] as String?,
-      );
+  factory Workout.fromJson(Map<String, dynamic> json) {
+    final durationSeconds =
+        (json['duration_seconds'] ?? json['durationSeconds'] ?? 0) as int;
+    return Workout(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      date: DateTime.parse(json['date'] as String),
+      duration: Duration(seconds: durationSeconds),
+      exercises: (json['exercises'] as List? ?? const [])
+          .map((e) => WorkoutExercise.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      notes: json['notes'] as String?,
+      clientRequestId:
+          (json['client_request_id'] ?? json['clientRequestId']) as String?,
+    );
+  }
 
   @override
-  List<Object?> get props => [id, name, date, duration, exercises, notes];
+  List<Object?> get props =>
+      [id, name, date, duration, exercises, notes, clientRequestId];
 }

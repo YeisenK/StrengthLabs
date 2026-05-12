@@ -486,7 +486,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get muscleArms => 'Brazos';
 
   @override
+  String get muscleBiceps => 'Bíceps';
+
+  @override
+  String get muscleTriceps => 'Tríceps';
+
+  @override
+  String get muscleForearms => 'Antebrazos';
+
+  @override
+  String get muscleGlutes => 'Glúteos';
+
+  @override
+  String get muscleCalves => 'Pantorrillas';
+
+  @override
   String get muscleCore => 'Core';
+
+  @override
+  String get muscleCardio => 'Cardio';
+
+  @override
+  String get muscleOther => 'Otro';
 
   @override
   String daysPerWeek(int count) {

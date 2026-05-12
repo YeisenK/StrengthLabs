@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:strengthlabs/features/auth/data/auth_repository.dart';
+import 'package:strengthlabs/features/auth/data/session_restore_result.dart';
 import 'package:strengthlabs/features/auth/domain/entities/user.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
@@ -20,19 +21,19 @@ void main() {
     blocTest<AuthCubit, AuthState>(
       'emits AuthUnauthenticated when no token stored',
       build: () {
-        when(() => repository.hasStoredTokens()).thenAnswer((_) async => false);
+        when(() => repository.restoreSession())
+            .thenAnswer((_) async => const SessionMissing());
         return AuthCubit(repository);
       },
       act: (cubit) => cubit.checkAuthStatus(),
       expect: () => [const AuthUnauthenticated()],
-      verify: (_) => verifyNever(() => repository.getCurrentUser()),
     );
 
     blocTest<AuthCubit, AuthState>(
-      'emits AuthAuthenticated when token valid and getCurrentUser succeeds',
+      'emits AuthAuthenticated when /auth/me succeeds online',
       build: () {
-        when(() => repository.hasStoredTokens()).thenAnswer((_) async => true);
-        when(() => repository.getCurrentUser()).thenAnswer((_) async => user);
+        when(() => repository.restoreSession())
+            .thenAnswer((_) async => const SessionRestored(user));
         return AuthCubit(repository);
       },
       act: (cubit) => cubit.checkAuthStatus(),
@@ -40,17 +41,36 @@ void main() {
     );
 
     blocTest<AuthCubit, AuthState>(
-      'falls back to AuthUnauthenticated when getCurrentUser throws',
+      'emits AuthAuthenticated from cache when /auth/me fails by network',
       build: () {
-        when(() => repository.hasStoredTokens()).thenAnswer((_) async => true);
-        when(() => repository.getCurrentUser())
-            .thenThrow(Exception('Token expired'));
-        when(() => repository.logout()).thenAnswer((_) async {});
+        when(() => repository.restoreSession())
+            .thenAnswer((_) async => const SessionRestored(user, fromCache: true));
+        return AuthCubit(repository);
+      },
+      act: (cubit) => cubit.checkAuthStatus(),
+      expect: () => const [AuthAuthenticated(user)],
+    );
+
+    blocTest<AuthCubit, AuthState>(
+      'emits AuthUnauthenticated when session is expired (401)',
+      build: () {
+        when(() => repository.restoreSession())
+            .thenAnswer((_) async => const SessionExpired());
         return AuthCubit(repository);
       },
       act: (cubit) => cubit.checkAuthStatus(),
       expect: () => [const AuthUnauthenticated()],
-      verify: (_) => verify(() => repository.logout()).called(1),
+    );
+
+    blocTest<AuthCubit, AuthState>(
+      'emits AuthUnauthenticated when offline AND no cache available',
+      build: () {
+        when(() => repository.restoreSession())
+            .thenAnswer((_) async => const SessionOfflineNoCache());
+        return AuthCubit(repository);
+      },
+      act: (cubit) => cubit.checkAuthStatus(),
+      expect: () => [const AuthUnauthenticated()],
     );
   });
 
@@ -158,3 +178,4 @@ void main() {
     );
   });
 }
+

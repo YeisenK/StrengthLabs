@@ -55,3 +55,5 @@ documentacion/
 android/key.properties
 android/*.jks
 android/*.keystore
+# Mocha E2E tests dependencies
+tests/node_modules/

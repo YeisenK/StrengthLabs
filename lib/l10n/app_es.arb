@@ -178,7 +178,14 @@
   "muscleLegs": "Piernas",
   "muscleShoulders": "Hombros",
   "muscleArms": "Brazos",
+  "muscleBiceps": "Bíceps",
+  "muscleTriceps": "Tríceps",
+  "muscleForearms": "Antebrazos",
+  "muscleGlutes": "Glúteos",
+  "muscleCalves": "Pantorrillas",
   "muscleCore": "Core",
+  "muscleCardio": "Cardio",
+  "muscleOther": "Otro",
 
   "daysPerWeek": "{count} días / semana",
   "@daysPerWeek": {
