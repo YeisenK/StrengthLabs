@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/plan/domain/entities/training_plan.dart';
+import 'package:strengthlabs/features/plan/domain/entities/training_plan.dart';
 
 abstract class PlanState extends Equatable {
   const PlanState();

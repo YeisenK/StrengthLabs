@@ -1,8 +1,8 @@
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout_set.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
 
 class WorkoutRepository {
   const WorkoutRepository(this._dioClient);
@@ -130,6 +130,21 @@ class WorkoutRepository {
         .toList();
   }
 
+  /// Most recent set the user has logged for [exerciseId]. Used to pre-fill
+  /// weight/reps/RPE when adding a new set during an active workout.
+  /// Returns null if the user has never used this exercise.
+  Future<LastSet?> getLastSet(String exerciseId) async {
+    if (DemoMode.isActive) return null;
+    final response = await _dioClient.dio.get('/exercises/$exerciseId/last-set');
+    final data = response.data as Map<String, dynamic>;
+    if (data.isEmpty) return null;
+    return LastSet(
+      weight: (data['weight'] as num?)?.toDouble(),
+      reps: (data['reps'] as num?)?.toInt(),
+      rpe: (data['rpe'] as num?)?.toDouble(),
+    );
+  }
+
   // ── Parsing helpers ───────────────────────────────────────────────────────────
 
   static Workout _workoutFromApi(Map<String, dynamic> json) {
@@ -170,5 +185,12 @@ class WorkoutRepository {
       isCustom: json['is_custom'] as bool? ?? false,
     );
   }
+}
 
+class LastSet {
+  const LastSet({this.weight, this.reps, this.rpe});
+
+  final double? weight;
+  final int? reps;
+  final double? rpe;
 }

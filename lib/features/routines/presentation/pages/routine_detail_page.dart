@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class RoutineDetailPage extends StatefulWidget {
   const RoutineDetailPage({super.key, required this.id});
@@ -29,6 +30,18 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
       length: _routine?.days.length ?? 0,
       vsync: this,
     );
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    final detail = await context.read<RoutinesCubit>().fetchDetail(widget.id);
+    if (detail != null && mounted) {
+      _tabController.dispose();
+      setState(() {
+        _routine = detail;
+        _tabController = TabController(length: detail.days.length, vsync: this);
+      });
+    }
   }
 
   @override
@@ -42,12 +55,13 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
     final routine = _routine;
 
     if (routine == null) {
+      final l10n = AppLocalizations.of(context)!;
       return Scaffold(
         appBar: AppBar(),
-        body: const EmptyStateWidget(
+        body: EmptyStateWidget(
           icon: Icons.search_off,
-          title: 'Routine not found',
-          subtitle: 'This routine may have been removed.',
+          title: l10n.routineNotFound,
+          subtitle: l10n.routineNotFoundSubtitle,
         ),
       );
     }
@@ -58,11 +72,18 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                routine.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+            title: Hero(
+              tag: 'routine-${routine.id}',
+              child: Material(
+                type: MaterialType.transparency,
+                child: Text(
+                  routine.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
               background: _RoutineHeader(routine: routine),
             ),
             bottom: TabBar(
@@ -85,7 +106,7 @@ class _RoutineDetailPageState extends State<RoutineDetailPage>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: AppButton(
-            label: 'Start this routine',
+            label: AppLocalizations.of(context)!.startThisRoutine,
             icon: Icons.play_arrow_rounded,
             onPressed: () {
               final day = routine.days[_tabController.index];
@@ -134,7 +155,7 @@ class _RoutineHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            theme.colorScheme.primaryContainer.withOpacity(0.8),
+            theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
             theme.colorScheme.surface,
           ],
         ),
@@ -147,19 +168,19 @@ class _RoutineHeader extends StatelessWidget {
           Row(
             children: [
               _Badge(
-                label: routine.level.label,
+                label: routine.level.localized(AppLocalizations.of(context)!),
                 color: levelColor,
               ),
               const SizedBox(width: 8),
               _Badge(
-                label: routine.goal.label,
+                label: routine.goal.localized(AppLocalizations.of(context)!),
                 color: theme.colorScheme.primary,
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            '${routine.daysPerWeek} days/week  ·  ${routine.days.length} training days',
+            '${AppLocalizations.of(context)!.daysPerWeek(routine.daysPerWeek)}  ·  ${AppLocalizations.of(context)!.trainingDaysCount(routine.days.length)}',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -180,7 +201,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -204,7 +225,7 @@ class _DayView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          '${day.exercises.length} exercises',
+          AppLocalizations.of(context)!.exercisesCount(day.exercises.length),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -267,7 +288,7 @@ class _ExerciseRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      routineExercise.exercise.muscleGroup.label,
+                      routineExercise.exercise.muscleGroup.localized(AppLocalizations.of(context)!),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

@@ -1,17 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_colors.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_state.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
-import 'package:strengthlabs_beta/shared/utils/formatters.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/core/constants/app_colors.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
+import 'package:strengthlabs/features/workouts/data/workout_repository.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_state.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/shared/utils/formatters.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class ActiveWorkoutPage extends StatefulWidget {
   const ActiveWorkoutPage({super.key, this.template});
@@ -30,7 +33,7 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
   @override
   void initState() {
     super.initState();
-    _cubit = ActiveWorkoutCubit();
+    _cubit = ActiveWorkoutCubit(context.read<WorkoutRepository>());
     if (widget.template != null) _cubit.loadTemplate(widget.template!);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _elapsed.value = _cubit.state.elapsed;
@@ -46,37 +49,46 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
   }
 
   void _finishWorkout() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Finish workout?'),
-        content: const Text('Only completed sets will be saved.'),
+        title: Text(l10n.finishWorkoutTitle),
+        content: Text(l10n.onlyCompletedSets),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Keep going'),
+            child: Text(l10n.keepGoing),
           ),
           FilledButton(
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               Navigator.pop(context);
               final workout = _cubit.finish();
+              final workoutsCubit = context.read<WorkoutsCubit>();
+              final fatigueCubit = context.read<FatigueCubit>();
+              final messenger = ScaffoldMessenger.of(context);
+              final errorColor = Theme.of(context).colorScheme.error;
+
               try {
-                await context.read<WorkoutsCubit>().saveWorkout(workout);
+                await workoutsCubit.saveWorkout(workout);
+                // Trigger fatigue recalculation in background
+                unawaited(fatigueCubit.loadSummary());
                 if (mounted) context.go('/workouts');
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text(
                         e.toString().replaceFirst('Exception: ', ''),
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      backgroundColor: errorColor,
                     ),
                   );
                 }
               }
             },
-            child: const Text('Finish'),
+            child: Text(l10n.finish),
           ),
         ],
       ),
@@ -84,15 +96,16 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
   }
 
   void _discardWorkout() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Discard workout?'),
-        content: const Text('All progress will be lost.'),
+        title: Text(l10n.discardWorkoutTitle),
+        content: Text(l10n.allProgressLost),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Keep going'),
+            child: Text(l10n.keepGoing),
           ),
           FilledButton(
             onPressed: () {
@@ -102,7 +115,7 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Discard'),
+            child: Text(l10n.discard),
           ),
         ],
       ),
@@ -139,10 +152,10 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
               child: state.exercises.isEmpty
                   ? EmptyStateWidget(
                       icon: Icons.add_circle_outline,
-                      title: 'No exercises yet',
-                      subtitle: 'Add your first exercise to get started',
+                      title: AppLocalizations.of(context)!.noExercisesYet,
+                      subtitle: AppLocalizations.of(context)!.noExercisesSubtitle,
                       action: AppButton(
-                        label: AppStrings.addExercise,
+                        label: AppLocalizations.of(context)!.addExercise,
                         icon: Icons.add,
                         expand: false,
                         onPressed: () => _showExercisePicker(context, state),
@@ -177,6 +190,7 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      showDragHandle: true,
       builder: (_) => _ExercisePickerSheet(
         exercises: exercises,
         onPick: (exercise) {
@@ -307,7 +321,7 @@ class _ActiveExerciseCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            'Target: ${activeExercise.sets.length} × ${activeExercise.targetReps!}',
+                            AppLocalizations.of(context)!.targetLabel(activeExercise.sets.length, activeExercise.targetReps!),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.w500,
@@ -327,18 +341,21 @@ class _ActiveExerciseCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             // Header row
-            Row(
-              children: const [
-                SizedBox(width: 32),
-                Expanded(flex: 2, child: _ColHeader('WEIGHT')),
-                SizedBox(width: 8),
-                Expanded(flex: 2, child: _ColHeader('REPS')),
-                SizedBox(width: 8),
-                Expanded(flex: 1, child: _ColHeader('RPE')),
-                SizedBox(width: 8),
-                SizedBox(width: 32),
-              ],
-            ),
+            Builder(builder: (ctx) {
+              final l10n = AppLocalizations.of(ctx)!;
+              return Row(
+                children: [
+                  const SizedBox(width: 32),
+                  Expanded(flex: 2, child: _ColHeader(l10n.colHeaderWeight)),
+                  const SizedBox(width: 8),
+                  Expanded(flex: 2, child: _ColHeader(l10n.colHeaderReps)),
+                  const SizedBox(width: 8),
+                  Expanded(flex: 1, child: _ColHeader(l10n.rpe)),
+                  const SizedBox(width: 8),
+                  const SizedBox(width: 32),
+                ],
+              );
+            }),
             const SizedBox(height: 4),
             ...activeExercise.sets.asMap().entries.map(
                   (entry) => _ActiveSetRow(
@@ -352,7 +369,7 @@ class _ActiveExerciseCard extends StatelessWidget {
             TextButton.icon(
               onPressed: () => cubit.addSet(activeExercise.id),
               icon: const Icon(Icons.add, size: 16),
-              label: const Text('Add set'),
+              label: Text(AppLocalizations.of(context)!.addSet),
               style: TextButton.styleFrom(
                 visualDensity: VisualDensity.compact,
               ),
@@ -437,7 +454,7 @@ class _ActiveSetRowState extends State<_ActiveSetRow> {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: isCompleted
-            ? AppColors.green.withOpacity(0.08)
+            ? AppColors.green.withValues(alpha: 0.08)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
@@ -489,6 +506,7 @@ class _ActiveSetRowState extends State<_ActiveSetRow> {
           GestureDetector(
             onTap: () {
               final newCompleted = !isCompleted;
+              if (newCompleted) HapticFeedback.mediumImpact();
               _sync(completed: newCompleted);
             },
             child: Container(
@@ -497,7 +515,7 @@ class _ActiveSetRowState extends State<_ActiveSetRow> {
               decoration: BoxDecoration(
                 color: isCompleted
                     ? AppColors.green
-                    : theme.colorScheme.surfaceVariant,
+                    : theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -566,7 +584,7 @@ class _RpeDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonHideUnderline(
@@ -645,22 +663,10 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Add Exercise',
+              AppLocalizations.of(context)!.addExerciseTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -673,7 +679,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search exercises...',
+                hintText: AppLocalizations.of(context)!.searchExercises,
                 prefixIcon: const Icon(Icons.search, size: 20),
                 isDense: true,
                 filled: true,
@@ -694,13 +700,13 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
                 _FilterChip(
-                  label: 'All',
+                  label: AppLocalizations.of(context)!.all,
                   isSelected: _selectedGroup == null,
                   onTap: () => setState(() => _selectedGroup = null),
                 ),
                 ...MuscleGroup.values.map(
                   (mg) => _FilterChip(
-                    label: mg.label,
+                    label: mg.localized(AppLocalizations.of(context)!),
                     isSelected: _selectedGroup == mg,
                     onTap: () => setState(
                       () => _selectedGroup =
@@ -720,12 +726,17 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: _filtered.length,
-              itemBuilder: (_, i) {
+              itemBuilder: (context, i) {
                 final ex = _filtered[i];
                 return ListTile(
                   title: Text(ex.name),
-                  subtitle: Text(ex.muscleGroup.label),
-                  trailing: const Icon(Icons.add_circle_outline),
+                  subtitle: Text(ex.muscleGroup.localized(AppLocalizations.of(context)!)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_circle_outline),
+                    ],
+                  ),
                   onTap: () => widget.onPick(ex),
                 );
               },
@@ -734,7 +745,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.add),
-            title: const Text('Create custom exercise'),
+            title: Text(AppLocalizations.of(context)!.createCustomExercise),
             onTap: () => _showCreateDialog(context),
           ),
           const SizedBox(height: 8),
@@ -751,28 +762,29 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
     final nameCtrl = TextEditingController();
     MuscleGroup selectedGroup = MuscleGroup.chest;
 
+    final l10n = AppLocalizations.of(sheetContext)!;
     final confirmed = await showDialog<bool>(
       context: sheetContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('New exercise'),
+          title: Text(l10n.newExercise),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(labelText: l10n.name),
                 textCapitalization: TextCapitalization.words,
                 autofocus: true,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<MuscleGroup>(
-                value: selectedGroup,
-                decoration: const InputDecoration(labelText: 'Muscle group'),
+                initialValue: selectedGroup,
+                decoration: InputDecoration(labelText: l10n.muscleGroup),
                 items: MuscleGroup.values
                     .map((mg) => DropdownMenuItem(
                           value: mg,
-                          child: Text(mg.label),
+                          child: Text(mg.localized(l10n)),
                         ))
                     .toList(),
                 onChanged: (v) {
@@ -784,11 +796,11 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Create'),
+              child: Text(l10n.create),
             ),
           ],
         ),
@@ -839,7 +851,7 @@ class _FilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer
-                : theme.colorScheme.surfaceVariant,
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -879,7 +891,7 @@ class _BottomBar extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onAddExercise,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text(AppStrings.addExercise),
+                label: Text(AppLocalizations.of(context)!.addExercise),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -898,7 +910,7 @@ class _BottomBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(AppStrings.finishWorkout),
+                child: Text(AppLocalizations.of(context)!.finishWorkout),
               ),
             ),
           ],

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/workout_set.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/workout_set.dart';
 
 class WorkoutExercise extends Equatable {
   const WorkoutExercise({

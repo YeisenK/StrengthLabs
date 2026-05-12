@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_cubit.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_state.dart';
-import 'package:strengthlabs_beta/shared/widgets/app_button.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_cubit.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_state.dart';
+import 'package:strengthlabs/shared/widgets/app_button.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/shared/widgets/skeleton_loaders.dart';
 
 class RoutinesPage extends StatefulWidget {
   const RoutinesPage({super.key});
@@ -35,9 +36,9 @@ class _RoutinesPageState extends State<RoutinesPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text(
-              AppStrings.routines,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              AppLocalizations.of(context)!.routines,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           SliverToBoxAdapter(
@@ -49,18 +50,17 @@ class _RoutinesPageState extends State<RoutinesPage> {
           BlocBuilder<RoutinesCubit, RoutinesState>(
             builder: (context, state) {
               if (state is RoutinesLoading) {
-                return const SliverFillRemaining(
-                  child: LoadingWidget(message: 'Loading routines...'),
-                );
+                return const RoutineListSkeleton();
               }
               if (state is RoutinesError) {
+                final l10n = AppLocalizations.of(context)!;
                 return SliverFillRemaining(
                   child: EmptyStateWidget(
                     icon: Icons.error_outline,
-                    title: 'Could not load routines',
+                    title: l10n.couldNotLoadRoutines,
                     subtitle: state.message,
                     action: AppButton(
-                      label: 'Retry',
+                      label: l10n.retry,
                       icon: Icons.refresh,
                       expand: false,
                       onPressed: () => context
@@ -72,11 +72,12 @@ class _RoutinesPageState extends State<RoutinesPage> {
               }
               if (state is RoutinesLoaded) {
                 if (state.routines.isEmpty) {
-                  return const SliverFillRemaining(
+                  final l10n = AppLocalizations.of(context)!;
+                  return SliverFillRemaining(
                     child: EmptyStateWidget(
                       icon: Icons.view_list_outlined,
-                      title: 'No routines found',
-                      subtitle: 'Try a different filter',
+                      title: l10n.noRoutinesFound,
+                      subtitle: l10n.tryDifferentFilter,
                     ),
                   );
                 }
@@ -118,13 +119,13 @@ class _LevelFilterRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         children: [
           _Chip(
-            label: 'All',
+            label: AppLocalizations.of(context)!.all,
             isSelected: selected == null,
             onTap: () => onChanged(null),
           ),
           ...RoutineLevel.values.map(
             (l) => _Chip(
-              label: l.label,
+              label: l.localized(AppLocalizations.of(context)!),
               isSelected: selected == l,
               onTap: () => onChanged(selected == l ? null : l),
             ),
@@ -158,7 +159,7 @@ class _Chip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer
-                : theme.colorScheme.surfaceVariant,
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -214,11 +215,11 @@ class _RoutineCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: levelColor.withOpacity(0.15),
+                        color: levelColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        routine.level.label,
+                        routine.level.localized(AppLocalizations.of(context)!),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: levelColor,
                           fontWeight: FontWeight.w600,
@@ -230,11 +231,11 @@ class _RoutineCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        routine.goal.label,
+                        routine.goal.localized(AppLocalizations.of(context)!),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -248,10 +249,16 @@ class _RoutineCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  routine.name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Hero(
+                  tag: 'routine-${routine.id}',
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Text(
+                      routine.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -274,7 +281,7 @@ class _RoutineCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${routine.daysPerWeek} days / week',
+                      AppLocalizations.of(context)!.daysPerWeek(routine.daysPerWeek),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -287,7 +294,7 @@ class _RoutineCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${routine.days.length} training days',
+                      AppLocalizations.of(context)!.trainingDaysCount(routine.daysPerWeek),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

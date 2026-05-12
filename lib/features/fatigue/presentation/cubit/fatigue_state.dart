@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
 
 abstract class FatigueState extends Equatable {
   const FatigueState();

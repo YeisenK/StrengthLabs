@@ -1,34 +1,35 @@
 import 'package:equatable/equatable.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
 
 enum RoutineLevel { beginner, intermediate, advanced }
 
 enum RoutineGoal { strength, hypertrophy, endurance, generalFitness }
 
 extension RoutineLevelLabel on RoutineLevel {
-  String get label {
+  String localized(AppLocalizations l10n) {
     switch (this) {
       case RoutineLevel.beginner:
-        return 'Beginner';
+        return l10n.levelBeginner;
       case RoutineLevel.intermediate:
-        return 'Intermediate';
+        return l10n.levelIntermediate;
       case RoutineLevel.advanced:
-        return 'Advanced';
+        return l10n.levelAdvanced;
     }
   }
 }
 
 extension RoutineGoalLabel on RoutineGoal {
-  String get label {
+  String localized(AppLocalizations l10n) {
     switch (this) {
       case RoutineGoal.strength:
-        return 'Strength';
+        return l10n.goalStrength;
       case RoutineGoal.hypertrophy:
-        return 'Hypertrophy';
+        return l10n.goalHypertrophy;
       case RoutineGoal.endurance:
-        return 'Endurance';
+        return l10n.goalEndurance;
       case RoutineGoal.generalFitness:
-        return 'General Fitness';
+        return l10n.goalGeneralFitness;
     }
   }
 }

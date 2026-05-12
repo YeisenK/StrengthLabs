@@ -1,8 +1,8 @@
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/features/routines/data/mock_routines.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/features/routines/data/mock_routines.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 
 class RoutineRepository {
   const RoutineRepository(this._dioClient);
@@ -37,7 +37,8 @@ class RoutineRepository {
   // ── Parsing ───────────────────────────────────────────────────────────────────
 
   static Routine _routineFromApi(Map<String, dynamic> m) {
-    final days = (m['days'] as List).map((d) {
+    final rawDays = m['days'] as List?;
+    final days = rawDays?.map((d) {
       final dm = d as Map<String, dynamic>;
       final exercises = (dm['exercises'] as List).map((e) {
         final em = e as Map<String, dynamic>;
@@ -55,7 +56,7 @@ class RoutineRepository {
         );
       }).toList();
       return RoutineDay(name: dm['name'] as String, exercises: exercises);
-    }).toList();
+    }).toList() ?? [];
 
     return Routine(
       id: m['id'] as String,

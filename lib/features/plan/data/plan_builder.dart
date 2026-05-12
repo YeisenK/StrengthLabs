@@ -1,5 +1,5 @@
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_metrics.dart';
-import 'package:strengthlabs_beta/features/plan/domain/entities/training_plan.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_metrics.dart';
+import 'package:strengthlabs/features/plan/domain/entities/training_plan.dart';
 
 class PlanBuilder {
   const PlanBuilder();

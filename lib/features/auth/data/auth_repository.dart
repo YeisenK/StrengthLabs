@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:strengthlabs_beta/core/constants/api_constants.dart';
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/core/storage/token_storage.dart';
-import 'package:strengthlabs_beta/features/auth/domain/entities/user.dart';
+import 'package:strengthlabs/core/constants/api_constants.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/core/storage/token_storage.dart';
+import 'package:strengthlabs/features/auth/domain/entities/user.dart';
 
 class AuthRepository {
   AuthRepository(this._dioClient, this._tokenStorage);
@@ -96,10 +96,23 @@ class AuthRepository {
 
   Future<void> logout() async {
     DemoMode.disable();
-    await Future.wait([
-      _tokenStorage.clearTokens(),
-      _googleSignIn.signOut(),
-    ]);
+    final refreshToken = await _tokenStorage.getRefreshToken();
+    try {
+      await _dioClient.dio.post(
+        '/auth/logout',
+        data: refreshToken != null ? {'refresh_token': refreshToken} : null,
+      );
+    } catch (_) {
+      // Best-effort: even if the network call fails (offline, server down)
+      // we still clear local tokens. Server-side blacklist will catch up
+      // on the next successful logout or just expire naturally.
+    }
+    await _tokenStorage.clearTokens();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // google_sign_in has no implementation on Linux/Windows
+    }
   }
 
   Future<void> _saveTokens(Map<String, dynamic> data) async {
@@ -113,11 +126,22 @@ class AuthRepository {
     final status = e.response?.statusCode;
     if (status == 401) return 'Invalid email or password';
     if (status == 409) return 'Email already registered';
-    if (status == 400 || status == 422) return 'Invalid input — please check your fields';
+    if (status == 429) {
+      final retryAfter = e.response?.headers.value('retry-after');
+      return retryAfter != null
+          ? 'Too many attempts. Try again in $retryAfter seconds.'
+          : 'Too many attempts. Please wait a moment and try again.';
+    }
+    if (status == 400 || status == 422) {
+      return 'Invalid input — please check your fields';
+    }
+    if (status != null && status >= 500) {
+      return 'The server is having trouble. Please try again in a moment.';
+    }
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
-      return 'Cannot reach server — check your connection';
+      return 'No connection — please check your internet';
     }
     return 'Something went wrong — please try again';
   }

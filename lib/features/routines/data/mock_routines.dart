@@ -1,5 +1,5 @@
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/workouts/data/mock_workouts.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/workouts/data/mock_workouts.dart';
 
 final List<Routine> kMockRoutines = [
   Routine(

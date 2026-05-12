@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_metrics.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_cubit.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/cubit/fatigue_state.dart';
-import 'package:strengthlabs_beta/features/plan/domain/entities/training_plan.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_cubit.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_state.dart';
-import 'package:strengthlabs_beta/shared/widgets/loading_widget.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_metrics.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_cubit.dart';
+import 'package:strengthlabs/features/fatigue/presentation/cubit/fatigue_state.dart';
+import 'package:strengthlabs/features/plan/domain/entities/training_plan.dart';
+import 'package:strengthlabs/features/plan/presentation/cubit/plan_cubit.dart';
+import 'package:strengthlabs/features/plan/presentation/cubit/plan_state.dart';
+import 'package:strengthlabs/shared/widgets/loading_widget.dart';
 
 class PlanPage extends StatefulWidget {
   const PlanPage({super.key});
@@ -67,14 +68,13 @@ class _PlanPageState extends State<PlanPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text(
-              'Training Plan',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              AppLocalizations.of(context)!.trainingPlan,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.event_outlined),
-                tooltip: 'Set event date',
                 onPressed: _pickEventDate,
               ),
             ],
@@ -107,8 +107,8 @@ class _PlanPageState extends State<PlanPage> {
               return BlocBuilder<PlanCubit, PlanState>(
                 builder: (context, state) {
                   if (state is PlanLoading) {
-                    return const SliverFillRemaining(
-                      child: LoadingWidget(message: 'Generating plan...'),
+                    return SliverFillRemaining(
+                      child: LoadingWidget(message: AppLocalizations.of(context)!.generatingPlan),
                     );
                   }
                   if (state is PlanError) {
@@ -126,8 +126,8 @@ class _PlanPageState extends State<PlanPage> {
                       daysToEvent: _daysToEvent,
                     );
                   }
-                  return const SliverFillRemaining(
-                    child: LoadingWidget(message: 'Loading fatigue data...'),
+                  return SliverFillRemaining(
+                    child: LoadingWidget(message: AppLocalizations.of(context)!.loadingFatigueData),
                   );
                 },
               );
@@ -262,7 +262,7 @@ class _PhaseBanner extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'target load',
+                  AppLocalizations.of(context)!.targetLoad,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -305,7 +305,7 @@ class _ObjectiveCard extends StatelessWidget {
                     size: 18, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'Week Objective',
+                  AppLocalizations.of(context)!.weekObjective,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -350,7 +350,7 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -401,7 +401,7 @@ class _WeeklyScheduleCard extends StatelessWidget {
                     size: 18, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'Weekly Schedule',
+                  AppLocalizations.of(context)!.weeklySchedule,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -455,7 +455,7 @@ class _SessionTile extends StatelessWidget {
           Expanded(
             child: session.isRest
                 ? Text(
-                    'Rest',
+                    AppLocalizations.of(context)!.rest,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
@@ -479,7 +479,7 @@ class _SessionTile extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFF9800).withOpacity(0.2),
+                                color: const Color(0xFFFF9800).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
@@ -520,7 +520,7 @@ class _CoachNotesCard extends StatelessWidget {
       child: ExpansionTile(
         leading: Icon(Icons.sports_outlined, color: theme.colorScheme.primary),
         title: Text(
-          'Coach Notes',
+          AppLocalizations.of(context)!.coachNotes,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -575,7 +575,7 @@ class _RationaleCard extends StatelessWidget {
         leading:
             Icon(Icons.science_outlined, color: theme.colorScheme.primary),
         title: Text(
-          'Periodization Rationale',
+          AppLocalizations.of(context)!.periodizationRationale,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -617,14 +617,13 @@ class _NoMetricsMessage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Compute server unavailable',
+              AppLocalizations.of(context)!.computeUnavailable,
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'The training plan requires the compute engine to be running. '
-              'Start the backend server and go to the Fatigue tab first.',
+              AppLocalizations.of(context)!.computeUnavailableDesc,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -634,7 +633,7 @@ class _NoMetricsMessage extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -662,7 +661,7 @@ class _ErrorMessage extends StatelessWidget {
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: onRetry,
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),

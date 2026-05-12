@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:strengthlabs_beta/core/constants/api_constants.dart';
-import 'package:strengthlabs_beta/core/storage/token_storage.dart';
+import 'package:strengthlabs/core/constants/api_constants.dart';
+import 'package:strengthlabs/core/storage/token_storage.dart';
 
 class DioClient {
   DioClient(this._tokenStorage) {
@@ -20,6 +20,9 @@ class DioClient {
 
   final TokenStorage _tokenStorage;
   late final Dio _dio;
+
+  // Updated by SettingsCubit whenever the locale changes.
+  static String languageCode = 'en';
 
   Dio get dio => _dio;
 }
@@ -57,6 +60,7 @@ class _AuthInterceptor extends Interceptor {
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
+    options.headers['Accept-Language'] = DioClient.languageCode;
     handler.next(options);
   }
 

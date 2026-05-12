@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/auth/data/auth_repository.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
+import 'package:strengthlabs/features/auth/data/auth_repository.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._repository) : super(const AuthInitial());
@@ -17,17 +17,14 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repository.getCurrentUser();
       emit(AuthAuthenticated(user));
-    } catch (e) {
-      // After a failed /auth/me the Dio interceptor has already cleared
-      // tokens if the refresh also failed (401). If tokens are gone it
-      // means the session is invalid → just go to login. Otherwise we
-      // couldn't reach the server, so surface that to the user.
-      final stillHasToken = await _repository.hasStoredTokens();
-      if (stillHasToken) {
-        emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
-      } else {
-        emit(const AuthUnauthenticated());
-      }
+    } catch (_) {
+      // If session restoration fails for any reason, clear tokens and go to
+      // login silently — showing an error on startup before the user has
+      // done anything is confusing.
+      try {
+        await _repository.logout();
+      } catch (_) {}
+      emit(const AuthUnauthenticated());
     }
   }
 

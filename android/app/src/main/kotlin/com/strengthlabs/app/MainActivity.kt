@@ -1,4 +1,4 @@
-package com.example.strengthlabs_beta
+package com.strengthlabs.app
 
 import io.flutter.embedding.android.FlutterActivity
 

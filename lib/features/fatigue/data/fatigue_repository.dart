@@ -1,7 +1,7 @@
-import 'package:strengthlabs_beta/core/demo/demo_mode.dart';
-import 'package:strengthlabs_beta/core/network/dio_client.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_summary.dart';
-import 'package:strengthlabs_beta/features/workouts/domain/entities/exercise.dart';
+import 'package:strengthlabs/core/demo/demo_mode.dart';
+import 'package:strengthlabs/core/network/dio_client.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_summary.dart';
+import 'package:strengthlabs/features/workouts/domain/entities/exercise.dart';
 
 class FatigueRepository {
   FatigueRepository(this._dioClient);

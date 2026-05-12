@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/core/constants/app_colors.dart';
-import 'package:strengthlabs_beta/core/constants/app_strings.dart';
-import 'package:strengthlabs_beta/features/export/data/export_service.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/workouts_state.dart';
-import 'package:strengthlabs_beta/shared/utils/formatters.dart';
+import 'package:strengthlabs/core/constants/app_colors.dart';
+import 'package:strengthlabs/l10n/app_localizations.dart';
+import 'package:strengthlabs/features/export/data/export_service.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/workouts_state.dart';
+import 'package:strengthlabs/shared/utils/formatters.dart';
 
 enum _ExportStatus { idle, loading, success }
 
@@ -51,11 +52,13 @@ class _ExportPageState extends State<ExportPage> {
     });
 
     try {
+      final l10n = AppLocalizations.of(context)!;
       final result = isXlsx
-          ? await _service.exportToExcel(workouts)
-          : await _service.exportToCsv(workouts);
+          ? await _service.exportToExcel(workouts, l10n)
+          : await _service.exportToCsv(workouts, l10n);
 
       if (!mounted) return;
+      HapticFeedback.mediumImpact();
       setState(() {
         if (isXlsx) {
           _xlsxStatus = _ExportStatus.success;
@@ -121,9 +124,9 @@ class _ExportPageState extends State<ExportPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text(
-              AppStrings.export_,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              AppLocalizations.of(context)!.export_,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           SliverPadding(
@@ -132,7 +135,7 @@ class _ExportPageState extends State<ExportPage> {
               delegate: SliverChildListDelegate([
                 // Date range
                 Text(
-                  AppStrings.dateRange,
+                  AppLocalizations.of(context)!.dateRange,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -144,15 +147,15 @@ class _ExportPageState extends State<ExportPage> {
 
                 // Export buttons
                 Text(
-                  'Export Format',
+                  AppLocalizations.of(context)!.exportFormat,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 12),
                 _ExportCard(
                   icon: Icons.table_chart_outlined,
-                  title: AppStrings.exportExcel,
-                  subtitle: 'Spreadsheet with styled header and column widths (.xlsx)',
+                  title: AppLocalizations.of(context)!.exportExcel,
+                  subtitle: AppLocalizations.of(context)!.excelSubtitle,
                   status: _xlsxStatus,
                   color: AppColors.green,
                   onTap: () => _export(isXlsx: true),
@@ -160,8 +163,8 @@ class _ExportPageState extends State<ExportPage> {
                 const SizedBox(height: 12),
                 _ExportCard(
                   icon: Icons.data_array_outlined,
-                  title: AppStrings.exportCsv,
-                  subtitle: 'Flat file for custom analysis (.csv)',
+                  title: AppLocalizations.of(context)!.exportCsv,
+                  subtitle: AppLocalizations.of(context)!.csvSubtitle,
                   status: _csvStatus,
                   color: theme.colorScheme.primary,
                   onTap: () => _export(isXlsx: false),
@@ -306,14 +309,20 @@ class _ExportCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  color: isSuccess
+                      ? AppColors.green.withValues(alpha: 0.15)
+                      : color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color),
+                child: Icon(
+                  isSuccess ? Icons.check : icon,
+                  color: isSuccess ? AppColors.green : color,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(

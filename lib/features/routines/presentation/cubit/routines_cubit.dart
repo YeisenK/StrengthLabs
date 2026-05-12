@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/routines/data/routine_repository.dart';
-import 'package:strengthlabs_beta/features/routines/domain/entities/routine.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/cubit/routines_state.dart';
+import 'package:strengthlabs/features/routines/data/routine_repository.dart';
+import 'package:strengthlabs/features/routines/domain/entities/routine.dart';
+import 'package:strengthlabs/features/routines/presentation/cubit/routines_state.dart';
 
 class RoutinesCubit extends Cubit<RoutinesState> {
   RoutinesCubit(this._repository) : super(const RoutinesInitial());
@@ -23,6 +23,14 @@ class RoutinesCubit extends Cubit<RoutinesState> {
   Routine? findById(String id) {
     try {
       return _cached.firstWhere((r) => r.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Routine?> fetchDetail(String id) async {
+    try {
+      return await _repository.getRoutine(id);
     } catch (_) {
       return null;
     }

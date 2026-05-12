@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:strengthlabs_beta/features/fatigue/domain/entities/fatigue_metrics.dart';
-import 'package:strengthlabs_beta/features/plan/data/plan_builder.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/cubit/plan_state.dart';
+import 'package:strengthlabs/features/fatigue/domain/entities/fatigue_metrics.dart';
+import 'package:strengthlabs/features/plan/data/plan_builder.dart';
+import 'package:strengthlabs/features/plan/presentation/cubit/plan_state.dart';
 
 class PlanCubit extends Cubit<PlanState> {
   PlanCubit(this._repository) : super(const PlanInitial());

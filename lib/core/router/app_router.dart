@@ -2,23 +2,40 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/cubit/auth_state.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/pages/login_page.dart';
-import 'package:strengthlabs_beta/features/auth/presentation/pages/register_page.dart';
-import 'package:strengthlabs_beta/features/export/presentation/pages/export_page.dart';
-import 'package:strengthlabs_beta/features/fatigue/presentation/pages/fatigue_dashboard_page.dart';
-import 'package:strengthlabs_beta/features/plan/presentation/pages/plan_page.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/pages/routine_detail_page.dart';
-import 'package:strengthlabs_beta/features/routines/presentation/pages/routines_page.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/cubit/active_workout_cubit.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/pages/active_workout_page.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/pages/workout_detail_page.dart';
-import 'package:strengthlabs_beta/features/workouts/presentation/pages/workout_list_page.dart';
-import 'package:strengthlabs_beta/shared/widgets/main_shell.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:strengthlabs/features/auth/presentation/cubit/auth_state.dart';
+import 'package:strengthlabs/features/auth/presentation/pages/login_page.dart';
+import 'package:strengthlabs/features/auth/presentation/pages/register_page.dart';
+import 'package:strengthlabs/features/export/presentation/pages/export_page.dart';
+import 'package:strengthlabs/features/fatigue/presentation/pages/fatigue_dashboard_page.dart';
+import 'package:strengthlabs/features/onboarding/data/onboarding_prefs.dart';
+import 'package:strengthlabs/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:strengthlabs/features/plan/presentation/pages/plan_page.dart';
+import 'package:strengthlabs/features/routines/presentation/pages/routine_detail_page.dart';
+import 'package:strengthlabs/features/routines/presentation/pages/routines_page.dart';
+import 'package:strengthlabs/features/settings/presentation/pages/settings_page.dart';
+import 'package:strengthlabs/features/workouts/presentation/cubit/active_workout_cubit.dart';
+import 'package:strengthlabs/features/workouts/presentation/pages/active_workout_page.dart';
+import 'package:strengthlabs/features/workouts/presentation/pages/workout_detail_page.dart';
+import 'package:strengthlabs/features/workouts/presentation/pages/workout_list_page.dart';
+import 'package:strengthlabs/shared/widgets/main_shell.dart';
 
 class AppRouter {
   AppRouter._();
+
+  /// In-memory cache so the router redirect can run synchronously.
+  /// Updated optimistically when onboarding finishes.
+  static bool _onboardingCompleted = false;
+  static bool _onboardingChecked = false;
+
+  static Future<void> primeOnboardingFlag() async {
+    _onboardingCompleted = await OnboardingPrefs.isCompleted();
+    _onboardingChecked = true;
+  }
+
+  static void markOnboardingCompleted() {
+    _onboardingCompleted = true;
+  }
 
   static GoRouter createRouter(AuthCubit authCubit) {
     final notifier = _AuthNotifier(authCubit);
@@ -30,17 +47,28 @@ class AppRouter {
         final authState = authCubit.state;
         final loc = state.matchedLocation;
         final isAuthRoute = loc == '/login' || loc == '/register';
+        final isPublicRoute = isAuthRoute || loc == '/settings';
+        final isOnboardingRoute = loc == '/onboarding';
 
-        // Still checking stored credentials — don't redirect yet
         if (authState is AuthInitial || authState is AuthLoading) return null;
 
         if ((authState is AuthUnauthenticated || authState is AuthError) &&
-            !isAuthRoute) {
+            !isPublicRoute) {
           return '/login';
         }
 
-        if (authState is AuthAuthenticated && isAuthRoute) {
-          return '/workouts';
+        if (authState is AuthAuthenticated) {
+          if (isAuthRoute) {
+            return _onboardingChecked && !_onboardingCompleted
+                ? '/onboarding'
+                : '/workouts';
+          }
+          if (_onboardingChecked && !_onboardingCompleted && !isOnboardingRoute) {
+            return '/onboarding';
+          }
+          if (_onboardingCompleted && isOnboardingRoute) {
+            return '/workouts';
+          }
         }
 
         return null;
@@ -48,11 +76,19 @@ class AppRouter {
       routes: [
         GoRoute(
           path: '/login',
-          builder: (_, _s) => const LoginPage(),
+          builder: (_, _) => const LoginPage(),
         ),
         GoRoute(
           path: '/register',
-          builder: (_, _s) => const RegisterPage(),
+          builder: (_, _) => const RegisterPage(),
+        ),
+        GoRoute(
+          path: '/onboarding',
+          builder: (_, _) => const OnboardingPage(),
+        ),
+        GoRoute(
+          path: '/settings',
+          builder: (_, _) => const SettingsPage(),
         ),
         GoRoute(
           path: '/active-workout',
@@ -70,7 +106,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: '/workouts',
-                  builder: (_, _s) => const WorkoutListPage(),
+                  builder: (_, _) => const WorkoutListPage(),
                   routes: [
                     GoRoute(
                       path: 'detail/:id',
@@ -85,7 +121,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: '/routines',
-                  builder: (_, _s) => const RoutinesPage(),
+                  builder: (_, _) => const RoutinesPage(),
                   routes: [
                     GoRoute(
                       path: 'detail/:id',
@@ -100,7 +136,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: '/fatigue',
-                  builder: (_, _s) => const FatigueDashboardPage(),
+                  builder: (_, _) => const FatigueDashboardPage(),
                 ),
               ],
             ),
@@ -108,7 +144,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: '/plan',
-                  builder: (_, _s) => const PlanPage(),
+                  builder: (_, _) => const PlanPage(),
                 ),
               ],
             ),
@@ -116,7 +152,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: '/export',
-                  builder: (_, _s) => const ExportPage(),
+                  builder: (_, _) => const ExportPage(),
                 ),
               ],
             ),
